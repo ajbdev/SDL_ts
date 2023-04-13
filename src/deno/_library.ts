@@ -9,6 +9,7 @@ const IS_WINDOWS = Deno.build.os === "windows";
 const UNIX_LIBRARY_PATHS = [
   "/usr/local/lib",
   "/usr/lib64",
+  "/usr/lib/x86_64-linux-gnu/",
 ];
 
 function getLibrarySuffix(): string {
@@ -34,12 +35,7 @@ function getLibraryPaths(libraryName: string, libraryPath?: string): string[] {
   const arch = "x64"; // TODO: Detect this somehow.
 
   if (libraryPath) {
-    libraryPaths.push(path.join(
-      libraryPath,
-      os,
-      arch,
-      fullLibraryName,
-    ));
+    libraryPaths.push(path.join(libraryPath, os, arch, fullLibraryName));
   }
 
   try {
@@ -58,12 +54,7 @@ function getLibraryPaths(libraryName: string, libraryPath?: string): string[] {
         libraryPath = path.join(envDir, libraryPath.substring(1));
       }
 
-      libraryPaths.push(path.join(
-        libraryPath,
-        os,
-        arch,
-        fullLibraryName,
-      ));
+      libraryPaths.push(path.join(libraryPath, os, arch, fullLibraryName));
     }
   } catch {
     // If we can't load the .env than just ignore it.
@@ -72,12 +63,7 @@ function getLibraryPaths(libraryName: string, libraryPath?: string): string[] {
   libraryPath = Deno.env.get(ENV_LIBRARY_PATH);
 
   if (libraryPath) {
-    libraryPaths.push(path.join(
-      libraryPath,
-      os,
-      arch,
-      fullLibraryName,
-    ));
+    libraryPaths.push(path.join(libraryPath, os, arch, fullLibraryName));
   }
 
   if (!IS_WINDOWS) {
@@ -87,11 +73,15 @@ function getLibraryPaths(libraryName: string, libraryPath?: string): string[] {
       libraryPaths.push(
         ...ldLibraryPath
           .split(":")
-          .map((libraryPath) => path.join(libraryPath, fullLibraryName)),
+          .map((libraryPath) => path.join(libraryPath, fullLibraryName))
       );
     }
 
-    libraryPaths.push(...UNIX_LIBRARY_PATHS.map((libraryPath) => path.join(libraryPath, fullLibraryName)));
+    libraryPaths.push(
+      ...UNIX_LIBRARY_PATHS.map((libraryPath) =>
+        path.join(libraryPath, fullLibraryName)
+      )
+    );
   }
 
   return libraryPaths;
@@ -100,7 +90,7 @@ function getLibraryPaths(libraryName: string, libraryPath?: string): string[] {
 export function denoLoadLibrary<T extends DynamicLibraryInterface>(
   libraryName: string,
   symbols: T,
-  libraryPath?: string,
+  libraryPath?: string
 ): DynamicLibrary<T> {
   const libraryPaths = getLibraryPaths(libraryName, libraryPath);
   const errors: Error[] = [];
@@ -109,7 +99,10 @@ export function denoLoadLibrary<T extends DynamicLibraryInterface>(
     try {
       // Cast the symbols as any in order to prevent a type checking bug.
       // deno-lint-ignore no-explicit-any
-      return Deno.dlopen(libraryPath, symbols as any) as unknown as DynamicLibrary<T>;
+      return Deno.dlopen(
+        libraryPath,
+        symbols as any
+      ) as unknown as DynamicLibrary<T>;
     } catch (error) {
       errors.push(error);
     }
@@ -117,6 +110,6 @@ export function denoLoadLibrary<T extends DynamicLibraryInterface>(
 
   throw new SDLError(
     `Failed to load library "${libraryName}" from "${libraryPaths.join(", ")}"`,
-    new AggregateError(errors),
+    new AggregateError(errors)
   );
 }
