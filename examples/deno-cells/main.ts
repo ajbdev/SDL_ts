@@ -1,10 +1,10 @@
 import { Box, BoxArray, IMG, Int, int, Pointer, SDL, SDLError } from "SDL_ts";
 import { path } from "../../deps.ts";
 import { ASSETS_PATH } from "../../shared/constants.ts";
+import { Player } from "./player.ts";
 
 const WINDOW_WIDTH = 1024;
 const WINDOW_HEIGHT = 768;
-
 
 function main(): number {
   SDL.Init(SDL.InitFlags.VIDEO);
@@ -18,27 +18,24 @@ function main(): number {
     WINDOW_HEIGHT,
     SDL.WindowFlags.SHOWN,
     windowBox,
-    rendererBox,
+    rendererBox
   );
 
-  const window = windowBox.unboxNotNull(() => `Failed to create window: ${SDL.GetError()}`);
-  const renderer = rendererBox.unboxNotNull(() => `Failed to create renderer: ${SDL.GetError()}`);
+  const window = windowBox.unboxNotNull(
+    () => `Failed to create window: ${SDL.GetError()}`
+  );
+  const renderer = rendererBox.unboxNotNull(
+    () => `Failed to create renderer: ${SDL.GetError()}`
+  );
 
-  SDL.SetWindowTitle(window, "Same Game");
+  SDL.SetWindowTitle(window, "Deno Cells");
 
-  const blockTexture = IMG.LoadTexture(renderer, path.join(ASSETS_PATH, "PlayerWalk48x48.png"));
-
-  if (blockTexture == null) {
-    throw new SDLError("Failed to create texture for block.png");
-  }
-
-  const textureSizeBox = new BoxArray<int>(Int, 2);
-  SDL.QueryTexture(blockTexture, null, null, textureSizeBox.pointers.at(0), textureSizeBox.pointers.at(1));
-
-  const textureWidth = textureSizeBox.at(0);
+  const playerTexture = IMG.LoadTexture(
+    renderer,
+    path.join(ASSETS_PATH, "denoCellsPlayer.png")
+  )!;
 
   const frameRect = new SDL.Rect(0, 0, 48, 48);
-  const current = new SDL.Rect(0, 0, 48, 48);
 
   SDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
@@ -47,30 +44,35 @@ function main(): number {
   let done = false;
   let lastDelta;
 
+  const player = new Player(playerTexture);
+
   while (!done) {
     while (SDL.PollEvent(event) != 0) {
       if (event.type === SDL.EventType.QUIT) {
         done = true;
       }
+      if (
+        event.type === SDL.EventType.KEYDOWN ||
+        event.type === SDL.EventType.KEYUP
+      ) {
+        player.input(
+          event.type,
+          SDL.GetScancodeName(event.key.keysym.scancode)
+        );
+      }
     }
 
     const delta = performance.now(); // Is this the highest resolution method of acquiring delta in deno?
 
-    if (delta % 100 === 0 && lastDelta != delta) { 
-      current.x += 48;
-      
-      if (current.x >= textureWidth) {
-        current.x = 0;
-      }
-
+    if (lastDelta != delta) {
+      player.update(delta);
       lastDelta = delta;
     }
 
     SDL.RenderClear(renderer);
-    SDL.RenderCopy(renderer, blockTexture, current, frameRect);
+    SDL.RenderCopy(renderer, playerTexture, player.frame, frameRect);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
-    
   }
 
   SDL.DestroyWindow(window);
@@ -78,7 +80,6 @@ function main(): number {
 
   return 0;
 }
-
 
 try {
   Deno.exit(main());

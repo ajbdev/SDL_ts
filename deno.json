@@ -30,9 +30,9 @@
     "codegen": "cd ./tools && deno run --unstable --allow-run --allow-read --allow-write ./codegen.ts",
     "codegen-scraper": "cd ./tools && deno run --allow-read --allow-write --allow-run ./codegen-scraper.ts > ../tmp/codegen-scraper.out",
     "run:init": "deno run --allow-net --allow-read=. --allow-write=. ./init.ts ./tmp/init",
+    "run:deno-cells": "cd ./examples/deno-cells && SDL_TS_ENV_DIR=$INIT_CWD deno run --unstable --allow-env --allow-ffi --allow-read=../.. $DENO_FLAGS ./main.ts",
     "run:doom-fire": "cd ./examples/doom-fire && SDL_TS_ENV_DIR=$INIT_CWD deno run --unstable --allow-env --allow-ffi --allow-read=../.. $DENO_FLAGS ./main.ts",
     "run:hello-world": "cd ./examples/hello-world && SDL_TS_ENV_DIR=$INIT_CWD deno run --unstable --allow-env --allow-ffi --allow-read=../.. $DENO_FLAGS ./main.ts",
-    "run:animation": "cd ./examples/animation && SDL_TS_ENV_DIR=$INIT_CWD deno run --unstable --allow-env --allow-ffi --allow-read=../.. $DENO_FLAGS ./main.ts",
     "run:renderer": "cd ./examples/renderer && SDL_TS_ENV_DIR=$INIT_CWD deno run --unstable --allow-env --allow-ffi --allow-read=../.. $DENO_FLAGS ./main.ts",
     "run:same-game": "cd ./examples/same-game && SDL_TS_ENV_DIR=$INIT_CWD deno run --unstable --allow-env --allow-ffi --allow-read=../.. $DENO_FLAGS ./main.ts",
     "test": "deno test --unstable --allow-ffi"
