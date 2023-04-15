@@ -6,12 +6,20 @@ import { Player } from "./player.ts";
 const WINDOW_WIDTH = 1024;
 const WINDOW_HEIGHT = 768;
 
+interface KeyMap {
+  [key: string]: boolean
+}
+
+
 function main(): number {
   SDL.Init(SDL.InitFlags.VIDEO);
   IMG.Init(IMG.InitFlags.PNG);
 
   const windowBox = new Box<Pointer<SDL.Window>>(Pointer);
   const rendererBox = new Box<Pointer<SDL.Renderer>>(Pointer);
+
+  // Just the keys we care about
+  const keys: KeyMap = ['W','A','S','D','Space'].reduce((acc, key) => ({...acc, [key]: false}), {})
 
   SDL.CreateWindowAndRenderer(
     WINDOW_WIDTH,
@@ -44,7 +52,7 @@ function main(): number {
   let done = false;
   let lastDelta;
 
-  const player = new Player(playerTexture);
+  const player = new Player(playerTexture, keys);
 
   while (!done) {
     while (SDL.PollEvent(event) != 0) {
@@ -55,10 +63,11 @@ function main(): number {
         event.type === SDL.EventType.KEYDOWN ||
         event.type === SDL.EventType.KEYUP
       ) {
-        player.input(
-          event.type,
-          SDL.GetScancodeName(event.key.keysym.scancode)
-        );
+        const k = SDL.GetScancodeName(event.key.keysym.scancode);
+        
+        if (Object.hasOwn(keys, k)) {
+          keys[k] = event.type === SDL.EventType.KEYDOWN ? true : false;
+        }
       }
     }
 
@@ -76,7 +85,9 @@ function main(): number {
     frameRect.w = player.frame.w;
     frameRect.h = player.frame.h;
 
-    SDL.RenderCopy(renderer, player.texture, player.frame, frameRect);
+    const center = new SDL.Point(frameRect.w / 2, frameRect.h / 2)
+
+    SDL.RenderCopyEx(renderer, player.texture, player.frame, frameRect,0,center,player.flip);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
   }
