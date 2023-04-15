@@ -30,11 +30,18 @@ const Animations = {
 } as const;
 
 export class Player {
-  animationState: AnimationState = AnimationState.Idle;
+  private animationState: AnimationState = AnimationState.Idle;
+  private position = vec(0, 0);
   public readonly frame: SDL.Rect;
 
-  constructor(private readonly texture: SDL.Texture) {
-    this.frame = this.getInitialFrame(this.animationState);
+
+  constructor(public readonly texture: SDL.Texture) {
+    this.frame = new SDL.Rect(
+      this.animation.start.x,
+      this.animation.start.y,
+      this.animation.size.x,
+      this.animation.size.y
+    );
   }
   update(delta: number): void {
     if (delta % 100 === 0) {
@@ -46,20 +53,35 @@ export class Player {
     }
   }
 
-  getInitialFrame(state: AnimationState) {
-    return new SDL.Rect(
-      this.animation.start.x,
-      this.animation.start.y,
-      this.animation.size.x,
-      this.animation.size.y
-    );
+  get pos(): Vector {
+    return this.position;
+  }
+
+  changeAnimation(state: AnimationState) {
+    if (this.animationState === state) {
+      return;
+    }
+    this.animationState = state;
+    this.frame.x = this.animation.start.x;
+    this.frame.y = this.animation.start.y;
+    this.frame.w = this.animation.size.x;
+    this.frame.h = this.animation.size.y;
   }
 
   get animation(): Animation {
     return Animations[this.animationState];
   }
+
   input(type: SDL.EventType, key: string): void {
-    if (key === "Space" && type === SDL.EventType.KEYDOWN) {
+    if (key === "D") {
+      this.position.x += 10;
+      this.changeAnimation(AnimationState.Running);
+    }
+    else if (key === "A") {
+      this.changeAnimation(AnimationState.Running);
+      this.position.x -= 10;
+    }
+    else if (key === "Space" && type === SDL.EventType.KEYDOWN) {
       const states = Object.keys(AnimationState);
       let i = states.indexOf(this.animationState) + 1;
 
@@ -67,7 +89,10 @@ export class Player {
         i = 0;
       }
 
-      this.animationState = states[i] as AnimationState;
+      this.changeAnimation(states[i] as AnimationState);
+    } else { 
+
+      this.changeAnimation(AnimationState.Idle);
     }
   }
 }

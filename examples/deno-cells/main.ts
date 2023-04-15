@@ -70,7 +70,13 @@ function main(): number {
     }
 
     SDL.RenderClear(renderer);
-    SDL.RenderCopy(renderer, playerTexture, player.frame, frameRect);
+
+    frameRect.x = player.pos.x;
+    frameRect.y = player.pos.y;
+    frameRect.w = player.frame.w;
+    frameRect.h = player.frame.h;
+
+    SDL.RenderCopy(renderer, player.texture, player.frame, frameRect);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
   }
