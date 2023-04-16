@@ -64,7 +64,7 @@ function main(): number {
         event.type === SDL.EventType.KEYUP
       ) {
         const k = SDL.GetScancodeName(event.key.keysym.scancode);
-        
+
         if (Object.hasOwn(keys, k)) {
           keys[k] = event.type === SDL.EventType.KEYDOWN ? true : false;
         }
@@ -80,8 +80,11 @@ function main(): number {
 
     SDL.RenderClear(renderer);
 
-    frameRect.x = player.pos.x;
-    frameRect.y = player.pos.y;
+    const offsetX = (player.origin.x - player.frame.w) / 2;
+    const offsetY = (player.origin.y - player.frame.h) / 2;
+
+    frameRect.x = player.pos.x + offsetX;
+    frameRect.y = player.pos.y + offsetY;
     frameRect.w = player.frame.w;
     frameRect.h = player.frame.h;
 

@@ -56,6 +56,7 @@ export class Player {
   private animationState: AnimationState = AnimationState.Idle;
   private position = vec(0, 0);
   private runVelocity = 0;
+  public readonly origin = vec(48, 48);
   private isAttacking = false;
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
   public readonly frame: SDL.Rect;
@@ -105,7 +106,6 @@ export class Player {
     } 
 
     this.position.x += this.runVelocity * (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) * .1;
-
 
     if (this.runVelocity === 0 && !this.isAttacking) {
       this.changeAnimation(AnimationState.Idle);
