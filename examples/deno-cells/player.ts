@@ -56,9 +56,9 @@ export class Player {
   private animationState: AnimationState = AnimationState.Idle;
   private position = vec(0, 0);
   private runVelocity = 0;
-  public readonly origin = vec(48, 48);
   private isAttacking = false;
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
+  public readonly origin = vec(48, 48);
   public readonly frame: SDL.Rect;
 
   constructor(public readonly texture: SDL.Texture, private readonly keys: KeyMap) {
