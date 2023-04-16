@@ -13,7 +13,7 @@ interface Vector {
   x: number;
   y: number;
 }
-function clamp(num, min, max) {
+function clamp(num: number, min: number, max: number): number {
   return num <= min 
     ? min 
     : num >= max 
@@ -32,19 +32,31 @@ interface Animation {
   start: Vector;
   size: Vector;
   frames: number;
+  once?: boolean;
 }
 
 const Animations = {
   [AnimationState.Idle]: { start: vec(0, 0), size: vec(48, 48), frames: 10 },
   [AnimationState.Running]: { start: vec(0, 48), size: vec(48, 48), frames: 8 },
-  [AnimationState.Slash]: { start: vec(0, 96), size: vec(64, 64), frames: 6 },
-  [AnimationState.Stab]: { start: vec(0, 160), size: vec(96, 48), frames: 7 },
+  [AnimationState.Slash]: {
+    start: vec(0, 96),
+    size: vec(64, 64),
+    frames: 6,
+    once: true,
+  },
+  [AnimationState.Stab]: {
+    start: vec(0, 160),
+    size: vec(96, 48),
+    frames: 7,
+    once: true,
+  },
 } as const;
 
 export class Player {
   private animationState: AnimationState = AnimationState.Idle;
   private position = vec(0, 0);
   private runVelocity = 0;
+  private isAttacking = false;
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
   public readonly frame: SDL.Rect;
 
@@ -70,34 +82,44 @@ export class Player {
       this.frame.x += this.animation.size.x;
 
       if (this.frame.x >= this.animation.size.x * this.animation.frames) {
+        if (this.animation.once) {
+          this.changeAnimation(AnimationState.Idle);
+          this.isAttacking = false;
+        }
         this.frame.x = this.animation.start.x;
       }
     }
 
-    if (this.keys['D']) {
+    if (this.keys.Space) {
+      this.attack();
+    } else if (this.keys.D && !this.isAttacking) {
       this.runVelocity = 5;
       this.flip = SDL.RendererFlip.NONE;
 
       this.changeAnimation(AnimationState.Running);
-    } else if (this.keys['A']) {
+    } else if (this.keys.A && !this.isAttacking) {
       this.runVelocity = 5;
       this.flip = SDL.RendererFlip.HORIZONTAL;
 
       this.changeAnimation(AnimationState.Running);
-    }
-
+    } 
 
     this.position.x += this.runVelocity * (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) * .1;
 
-    if (this.runVelocity === 0) {
+
+    if (this.runVelocity === 0 && !this.isAttacking) {
       this.changeAnimation(AnimationState.Idle);
     }
     if (this.runVelocity > 0) {
       this.runVelocity = clamp(this.runVelocity - 2.5,0,15);
-    }
-    
+    } 
   }
 
+  attack() {
+      this.changeAnimation(AnimationState.Slash);
+      this.runVelocity = 0;
+      this.isAttacking = true;
+  }
 
   changeAnimation(state: AnimationState): void {
     if (this.animationState === state) {
@@ -108,36 +130,5 @@ export class Player {
     this.frame.y = this.animation.start.y;
     this.frame.w = this.animation.size.x;
     this.frame.h = this.animation.size.y;
-  }
-
-
-  input(type: SDL.EventType, key: string): void {
-    const numkeys = new Box<int>(Int);
-    SDL.GetKeyboardState(numkeys)
-    console.log(numkeys.value)
-    if (key === "D") {
-      this.runVelocity = clamp(this.runVelocity + 5,0,15);
-      this.position.x += this.runVelocity;
-
-      this.flip = SDL.RendererFlip.NONE;
-      this.changeAnimation(AnimationState.Running);
-    }
-    else if (key === "A") {
-      this.runVelocity = clamp(this.runVelocity + 5,0,15);
-      this.position.x -= this.runVelocity;
-      
-      this.flip = SDL.RendererFlip.HORIZONTAL;
-      this.changeAnimation(AnimationState.Running);
-    }
-    else if (key === "Space" && type === SDL.EventType.KEYDOWN) {
-      const states = Object.keys(AnimationState);
-      let i = states.indexOf(this.animationState) + 1;
-
-      if (i >= states.length) {
-        i = 0;
-      }
-
-      this.changeAnimation(states[i] as AnimationState);
-    }
   }
 }
