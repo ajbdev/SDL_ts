@@ -10,7 +10,6 @@ interface KeyMap {
   [key: string]: boolean
 }
 
-
 function main(): number {
   SDL.Init(SDL.InitFlags.VIDEO);
   IMG.Init(IMG.InitFlags.PNG);
@@ -19,7 +18,7 @@ function main(): number {
   const rendererBox = new Box<Pointer<SDL.Renderer>>(Pointer);
 
   // Just the keys we care about
-  const keys: KeyMap = ['W','A','S','D','Space'].reduce((acc, key) => ({...acc, [key]: false}), {})
+  const keys: KeyMap = ['W','A','S','D','Space','Left','Right'].reduce((acc, key) => ({...acc, [key]: false}), {})
 
   SDL.CreateWindowAndRenderer(
     WINDOW_WIDTH,
@@ -41,6 +40,11 @@ function main(): number {
   const playerTexture = IMG.LoadTexture(
     renderer,
     path.join(ASSETS_PATH, "denoCellsPlayer.png")
+  )!;
+
+  const levelTexture = IMG.LoadTexture(
+    renderer,
+    path.join(ASSETS_PATH, "denoCellsLevel.png")
   )!;
 
   const frameRect = new SDL.Rect(0, 0, 48, 48);

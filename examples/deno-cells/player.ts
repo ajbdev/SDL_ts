@@ -1,4 +1,4 @@
-import { Box, Int, SDL, int } from "SDL_ts";
+import { SDL } from "SDL_ts";
 
 const AnimationState = {
   Idle: "Idle",
@@ -33,6 +33,7 @@ interface Animation {
   size: Vector;
   frames: number;
   once?: boolean;
+  delay?: number;
 }
 
 const Animations = {
@@ -43,6 +44,7 @@ const Animations = {
     size: vec(64, 64),
     frames: 6,
     once: true,
+    delay: 60
   },
   [AnimationState.Stab]: {
     start: vec(0, 160),
@@ -79,7 +81,9 @@ export class Player {
   }
 
   update(delta: number): void {
-    if (delta % 100 === 0) {
+    const delay = this.animation.delay ?? 100;
+
+    if (delta % delay === 0) {
       this.frame.x += this.animation.size.x;
 
       if (this.frame.x >= this.animation.size.x * this.animation.frames) {
@@ -93,12 +97,12 @@ export class Player {
 
     if (this.keys.Space) {
       this.attack();
-    } else if (this.keys.D && !this.isAttacking) {
+    } else if ((this.keys.D || this.keys.Right) && !this.isAttacking) {
       this.runVelocity = 5;
       this.flip = SDL.RendererFlip.NONE;
 
       this.changeAnimation(AnimationState.Running);
-    } else if (this.keys.A && !this.isAttacking) {
+    } else if ((this.keys.A || this.keys.Left) && !this.isAttacking) {
       this.runVelocity = 5;
       this.flip = SDL.RendererFlip.HORIZONTAL;
 
@@ -115,7 +119,7 @@ export class Player {
     } 
   }
 
-  attack() {
+  attack(): void {
       this.changeAnimation(AnimationState.Slash);
       this.runVelocity = 0;
       this.isAttacking = true;
