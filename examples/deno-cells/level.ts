@@ -32,7 +32,7 @@ class Tilemap {
   constructor() {
     this.tiles = [
       tile(0, 0, Tiles.BLANK, this.tilesize),
-      tile(3, 2, Tiles.FLOOR, this.tilesize)
+      tile(2, 1, Tiles.FLOOR, this.tilesize)
     ]
   }
 
@@ -64,6 +64,8 @@ export class Level {
 
   draw(): void {
     this.fill(this.tilemap.get(Tiles.FLOOR), vec(0, 2), vec(1, 0), 64);
+
+    console.log(this.grid);
   }
   
   fill(tile: Tile, at: Vector, dir: Vector, amount: number): void {
