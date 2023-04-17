@@ -1,5 +1,7 @@
 import { SDL } from "SDL_ts";
 
+import { Vector, clamp, vec } from './util.ts';
+
 const AnimationState = {
   Idle: "Idle",
   Running: "Running",
@@ -9,24 +11,11 @@ const AnimationState = {
 
 type AnimationState = typeof AnimationState[keyof typeof AnimationState];
 
-interface Vector {
-  x: number;
-  y: number;
-}
-function clamp(num: number, min: number, max: number): number {
-  return num <= min 
-    ? min 
-    : num >= max 
-      ? max 
-      : num
-}
-
 interface KeyMap {
   [key: string]: boolean
 }
 
 
-const vec = (x: number, y: number): Vector => ({ x, y });
 
 interface Animation {
   start: Vector;

@@ -2,6 +2,7 @@ import { Box, BoxArray, IMG, Int, int, Pointer, SDL, SDLError } from "SDL_ts";
 import { path } from "../../deps.ts";
 import { ASSETS_PATH } from "../../shared/constants.ts";
 import { Player } from "./player.ts";
+import { Level } from "./level.ts";
 
 const WINDOW_WIDTH = 1024;
 const WINDOW_HEIGHT = 768;
@@ -58,6 +59,8 @@ function main(): number {
 
   const player = new Player(playerTexture, keys);
 
+  const level = new Level(levelTexture);
+
   while (!done) {
     while (SDL.PollEvent(event) != 0) {
       if (event.type === SDL.EventType.QUIT) {
@@ -92,11 +95,18 @@ function main(): number {
     frameRect.w = player.frame.w;
     frameRect.h = player.frame.h;
 
-    const center = new SDL.Point(frameRect.w / 2, frameRect.h / 2)
+    const center = new SDL.Point(frameRect.w / 2, frameRect.h / 2);
 
     SDL.RenderCopyEx(renderer, player.texture, player.frame, frameRect,0,center,player.flip);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
+
+    for (let y = 0; y < level.grid.length; y++) {
+      for (let x = 0; x < level.grid[y].length; x++) {
+        const tile = level.grid[y][x];
+        SDL.RenderCopy(renderer, level.texture, tile.rect, new SDL.Rect(x * level.tilesize, y * level.tilesize, level.tilesize, level.tilesize))
+      }
+    }
   }
 
   SDL.DestroyWindow(window);
