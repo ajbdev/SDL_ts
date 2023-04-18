@@ -61,13 +61,6 @@ function main(): number {
 
   const level = new Level(levelTexture);
 
-  for (let y = 0; y < level.grid.length; y++) {
-    for (let x = 0; x < level.grid[y].length; x++) {
-      const tile = level.grid[y][x];
-      SDL.RenderCopy(renderer, level.texture, tile.rect, new SDL.Rect(x * level.tilesize, y * level.tilesize, level.tilesize, level.tilesize))
-    }
-  }
-
   while (!done) {
     while (SDL.PollEvent(event) != 0) {
       if (event.type === SDL.EventType.QUIT) {
@@ -94,6 +87,19 @@ function main(): number {
 
     SDL.RenderClear(renderer);
 
+    for (const tile of level.tiles) {
+      if (!tile.dstrect) {
+        continue;
+      }
+
+      SDL.RenderCopy(
+        renderer,
+        level.texture,
+        tile.srcrect,
+        tile.dstrect
+      );
+    }
+
     const offsetX = (player.origin.x - player.frame.w) / 2;
     const offsetY = (player.origin.y - player.frame.h) / 2;
 
@@ -104,7 +110,7 @@ function main(): number {
 
     const center = new SDL.Point(frameRect.w / 2, frameRect.h / 2);
 
-    SDL.RenderCopyEx(renderer, player.texture, player.frame, frameRect,0,center,player.flip);
+    SDL.RenderCopyEx(renderer, player.texture, player.frame, frameRect, 0, center, player.flip);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
 

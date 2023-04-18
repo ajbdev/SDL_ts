@@ -12,28 +12,26 @@ enum Tiles {
 interface Tile {
   coords: Vector
   label: Tiles,
-  rect: SDL.Rect
-}
-
-const tile = (coordsX: number, coordsY: number, label: Tiles, tilesize: number): Tile => {
-  const rect = new SDL.Rect(coordsX * tilesize, coordsY * tilesize, tilesize, tilesize)
-
-  return {
-    coords: vec(coordsX, coordsY),
-    label,
-    rect
-  }
+  srcrect: SDL.Rect,
+  dstrect?: SDL.Rect
 }
 
 class Tilemap {
-  tiles: Tile[];
-  public readonly tilesize: number = 16;
+  tiles: Tile[] = [];
 
-  constructor() {
-    this.tiles = [
-      tile(0, 0, Tiles.BLANK, this.tilesize),
-      tile(2, 1, Tiles.FLOOR, this.tilesize)
-    ]
+  constructor(public readonly tileSize: number) {
+    this.tile(0, 0, Tiles.BLANK);
+    this.tile(2, 1, Tiles.FLOOR);
+  }
+  
+  tile(coordsX: number, coordsY: number, label: Tiles): void {
+    const srcrect = new SDL.Rect(coordsX * this.tileSize, coordsY * this.tileSize, this.tileSize, this.tileSize);
+
+    this.tiles.push({
+      coords: vec(coordsX, coordsY),
+      label,
+      srcrect
+    });
   }
 
   get(label: Tiles): Tile {
@@ -42,36 +40,37 @@ class Tilemap {
 }
 
 export class Level {
-  public grid: Tile[][] = [];
+  public readonly tiles: Tile[] = [];
   private tilemap: Tilemap;
   constructor(public readonly texture: SDL.Texture) { 
-    this.tilemap = new Tilemap();
-
-    // Fixed grid size by dividing 1024x768 by 16
-    for (let y = 0; y < 48; y++) {
-      this.grid[y] = [];
-      for (let x = 0; x < 64; x++) {
-        this.grid[y][x] = this.tilemap.get(Tiles.BLANK);
-      }
-    }
+    this.tilemap = new Tilemap(16);
 
     this.draw();
   }
 
-  get tilesize():number {
-    return this.tilemap.tilesize;
+  get tileSize():number {
+    return this.tilemap.tileSize;
   }
 
   draw(): void {
-    this.fill(this.tilemap.get(Tiles.FLOOR), vec(0, 2), vec(1, 0), 64);
-
-    console.log(this.grid);
+    this.fill(this.tilemap.get(Tiles.FLOOR), vec(0, 3), vec(1, 0), 64);
   }
   
   fill(tile: Tile, at: Vector, dir: Vector, amount: number): void {
     for (let i = 0; i < amount; i++) {
-      const step = vec(at.x + (dir.x * i), at.y + (dir.y * i));
-      this.grid[at.y + step.y][at.x + step.x] = tile;
+      const pos = vec(at.x + (dir.x * i), at.y + (dir.y * i));
+
+      this.tiles.push(
+        {
+          ...tile,
+          dstrect: new SDL.Rect(
+            pos.x * this.tileSize,
+            pos.y * this.tileSize,
+            this.tileSize,
+            this.tileSize
+          )
+        }
+      )
     }
   }
 }
