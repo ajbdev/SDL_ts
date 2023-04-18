@@ -103,8 +103,10 @@ function main(): number {
     const offsetX = (player.origin.x - player.frame.w) / 2;
     const offsetY = (player.origin.y - player.frame.h) / 2;
 
-    frameRect.x = player.pos.x + offsetX;
-    frameRect.y = player.pos.y + offsetY;
+    const snapToGrid = 6;
+
+    frameRect.x = player.pos.x + offsetX + snapToGrid;
+    frameRect.y = player.pos.y + offsetY + snapToGrid;
     frameRect.w = player.frame.w;
     frameRect.h = player.frame.h;
 
