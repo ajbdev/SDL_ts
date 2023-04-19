@@ -4,9 +4,15 @@ import { Vector, vec } from './util.ts';
 
 enum Tiles {
   BLANK,
-  FLOOR,
-  FLOOR_TL,
-  FLOOR_TR
+  BRICK_N,
+  BRICK_NE,
+  BRICK_E,
+  BRICK_SE,
+  BRICK_S,
+  BRICK_SW,
+  BRICK_NW,
+  BRICK_W,
+  SLAB_N,
 }
 
 enum Flag {
@@ -14,7 +20,7 @@ enum Flag {
 }
 
 export const TileFlags = {
-  [Tiles.FLOOR]: [ Flag.BOUNDARY ]
+  [Tiles.BRICK_N]: [ Flag.BOUNDARY ]
 }
 
 interface Tile {
@@ -29,7 +35,12 @@ class Tilemap {
 
   constructor(public readonly tileSize: number) {
     this.tile(0, 0, Tiles.BLANK);
-    this.tile(2, 1, Tiles.FLOOR);
+    this.tile(2, 1, Tiles.BRICK_N);
+    this.tile(3, 1, Tiles.BRICK_NE);
+    this.tile(3, 2, Tiles.BRICK_E);
+    this.tile(1, 3, Tiles.BRICK_SW);
+    this.tile(1, 2, Tiles.BRICK_W);
+    this.tile(2, 5, Tiles.SLAB_N);
   }
   
   tile(coordsX: number, coordsY: number, label: Tiles): void {
@@ -61,7 +72,23 @@ export class Level {
   }
 
   draw(): void {
-    this.fill(this.tilemap.get(Tiles.FLOOR), vec(0, 3), vec(1, 0), 64);
+    this.fill(this.tilemap.get(Tiles.BRICK_N), vec(0, 3), vec(1, 0), 10);
+    this.place(this.tilemap.get(Tiles.BRICK_NE), vec(10, 3));
+    this.fill(this.tilemap.get(Tiles.BRICK_E), vec(10, 4), vec(0, 1), 3);
+    this.fill(this.tilemap.get(Tiles.SLAB_N), vec(10, 7), vec(1, 0), 8);
+    this.fill(this.tilemap.get(Tiles.BRICK_W), vec(17, 4), vec(0, 1), 3);
+  }
+
+  place(tile: Tile, at: Vector): void {
+    this.tiles.push({
+      ...tile,
+      dstrect: new SDL.Rect(
+        at.x * this.tileSize,
+        at.y * this.tileSize,
+        this.tileSize,
+        this.tileSize
+      )
+    })
   }
   
   fill(tile: Tile, at: Vector, dir: Vector, amount: number): void {

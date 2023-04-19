@@ -48,18 +48,17 @@ function main(): number {
     path.join(ASSETS_PATH, "denoCellsLevel.png")
   )!;
 
-  const frameRect = new SDL.Rect(0, 0, 48, 48);
-
   SDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
   const event = new SDL.Event();
 
   let done = false;
-  let lastDelta;
-
-  const player = new Player(playerTexture, keys);
+  let lastTick;
 
   const level = new Level(levelTexture);
+
+  const player = new Player(playerTexture, keys, level);
+
 
   while (!done) {
     while (SDL.PollEvent(event) != 0) {
@@ -78,11 +77,11 @@ function main(): number {
       }
     }
 
-    const delta = performance.now(); // Is this the highest resolution method of acquiring delta in deno?
+    const tick = performance.now(); // Is this the highest resolution method of acquiring tick in deno?
 
-    if (lastDelta != delta) {
-      player.update(delta);
-      lastDelta = delta;
+    if (lastTick != tick) {
+      player.update(tick);
+      lastTick = tick;
     }
 
     SDL.RenderClear(renderer);
@@ -100,19 +99,9 @@ function main(): number {
       );
     }
 
-    const offsetX = (player.origin.x - player.frame.w) / 2;
-    const offsetY = (player.origin.y - player.frame.h) / 2;
+    const center = new SDL.Point(player.worldRect.w / 2, player.worldRect.h / 2);
 
-    const snapToGrid = 6;
-
-    frameRect.x = player.pos.x + offsetX + snapToGrid;
-    frameRect.y = player.pos.y + offsetY + snapToGrid;
-    frameRect.w = player.frame.w;
-    frameRect.h = player.frame.h;
-
-    const center = new SDL.Point(frameRect.w / 2, frameRect.h / 2);
-
-    SDL.RenderCopyEx(renderer, player.texture, player.frame, frameRect, 0, center, player.flip);
+    SDL.RenderCopyEx(renderer, player.texture, player.animRect, player.worldRect, 0, center, player.flip);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
 

@@ -1,6 +1,7 @@
 import { SDL } from "SDL_ts";
 
 import { Vector, clamp, vec } from './util.ts';
+import { Level } from "./level.ts";
 
 const AnimationState = {
   Idle: "Idle",
@@ -49,37 +50,48 @@ export class Player {
   private gravityVelocity = 0.5;
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
   public readonly origin = vec(48, 48);
-  public readonly frame: SDL.Rect;
+  public readonly animRect: SDL.Rect;
+  public readonly worldRect: SDL.Rect;
 
-  constructor(public readonly texture: SDL.Texture, private readonly keys: KeyMap) {
-    this.frame = new SDL.Rect(
+  constructor(public readonly texture: SDL.Texture, private readonly keys: KeyMap, private readonly level: Level) {
+    this.animRect = new SDL.Rect(
       this.animation.start.x,
       this.animation.start.y,
       this.animation.size.x,
       this.animation.size.y
     );
+
+    this.worldRect = new SDL.Rect(0, 0, 0, 0);
   }
 
   get animation(): Animation {
     return Animations[this.animationState];
   }
 
-  get pos(): Vector {
-    return this.position;
+  calcWorldRect(): void {
+    const offsetX = (this.origin.x - this.animRect.w) / 2;
+    const offsetY = (this.origin.y - this.animRect.h) / 2;
+
+    const snapToGrid = 6;
+
+    this.worldRect.x = this.position.x + offsetX + snapToGrid;
+    this.worldRect.y = this.position.y + offsetY + snapToGrid;
+    this.worldRect.w = this.animRect.w;
+    this.worldRect.h = this.animRect.h;
   }
 
-  update(delta: number): void {
+  update(tick: number): void {
     const delay = this.animation.delay ?? 100;
 
-    if (delta % delay === 0) {
-      this.frame.x += this.animation.size.x;
+    if (tick % delay === 0) {
+      this.animRect.x += this.animation.size.x;
 
-      if (this.frame.x >= this.animation.size.x * this.animation.frames) {
+      if (this.animRect.x >= this.animation.size.x * this.animation.frames) {
         if (this.animation.once) {
           this.changeAnimation(AnimationState.Idle);
           this.isAttacking = false;
         }
-        this.frame.x = this.animation.start.x;
+        this.animRect.x = this.animation.start.x;
       }
     }
 
@@ -101,12 +113,31 @@ export class Player {
 
     this.position.y += this.gravityVelocity;
 
+    this.checkCollisionAndBounce();
+
+    this.calcWorldRect();
+
     if (this.runVelocity === 0 && !this.isAttacking) {
       this.changeAnimation(AnimationState.Idle);
     }
     if (this.runVelocity > 0) {
       this.runVelocity = clamp(this.runVelocity - 2.5, 0, 15);
-    } 
+    }
+  }
+
+  checkCollisionAndBounce(): void {
+    for (const tile of this.level.tiles) {
+      if (!tile.dstrect) {
+        continue;
+      }
+      if (SDL.HasIntersection(this.worldRect, tile.dstrect)) {
+        if (this.worldRect.y + this.worldRect.h > tile.dstrect.y) {
+          this.position.y = tile.dstrect.y - this.worldRect.h;
+        }
+
+        return;
+      }
+    }
   }
 
   attack(): void {
@@ -120,9 +151,9 @@ export class Player {
       return;
     }
     this.animationState = state;
-    this.frame.x = this.animation.start.x;
-    this.frame.y = this.animation.start.y;
-    this.frame.w = this.animation.size.x;
-    this.frame.h = this.animation.size.y;
+    this.animRect.x = this.animation.start.x;
+    this.animRect.y = this.animation.start.y;
+    this.animRect.w = this.animation.size.x;
+    this.animRect.h = this.animation.size.y;
   }
 }
