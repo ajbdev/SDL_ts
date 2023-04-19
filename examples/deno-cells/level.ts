@@ -9,6 +9,14 @@ enum Tiles {
   FLOOR_TR
 }
 
+enum Flag {
+  BOUNDARY
+}
+
+export const TileFlags = {
+  [Tiles.FLOOR]: [ Flag.BOUNDARY ]
+}
+
 interface Tile {
   coords: Vector
   label: Tiles,

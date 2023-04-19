@@ -15,8 +15,6 @@ interface KeyMap {
   [key: string]: boolean
 }
 
-
-
 interface Animation {
   start: Vector;
   size: Vector;
@@ -48,6 +46,7 @@ export class Player {
   private position = vec(0, 0);
   private runVelocity = 0;
   private isAttacking = false;
+  private gravityVelocity = 0.5;
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
   public readonly origin = vec(48, 48);
   public readonly frame: SDL.Rect;
@@ -100,11 +99,13 @@ export class Player {
 
     this.position.x += this.runVelocity * (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) * .1;
 
+    this.position.y += this.gravityVelocity;
+
     if (this.runVelocity === 0 && !this.isAttacking) {
       this.changeAnimation(AnimationState.Idle);
     }
     if (this.runVelocity > 0) {
-      this.runVelocity = clamp(this.runVelocity - 2.5,0,15);
+      this.runVelocity = clamp(this.runVelocity - 2.5, 0, 15);
     } 
   }
 
