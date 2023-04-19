@@ -24,6 +24,13 @@ export const BitmapOrder = {
 
 export type BitmapOrder = Enum<typeof BitmapOrder>;
 
+export const bool = {
+  FALSE: 0,
+  TRUE: 1,
+} as const;
+
+export type bool = Enum<typeof bool>;
+
 export const EventType = {
   FIRSTEVENT: 0,
   QUIT: 256,

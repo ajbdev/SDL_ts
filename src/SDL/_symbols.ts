@@ -200,6 +200,14 @@ export const symbols: DynamicLibraryInterface = {
     ],
     result: "pointer", /* char* */
   },
+  SDL_IntersectRect: {
+    parameters: [
+      "pointer", /* SDL_Rect* A */
+      "pointer", /* SDL_Rect* B */
+      "pointer", /* SDL_Rect* result */
+    ],
+    result: "u32", /* SDL_bool */
+  },
   SDL_Init: {
     parameters: [
       "u32", /* Uint32 flags */

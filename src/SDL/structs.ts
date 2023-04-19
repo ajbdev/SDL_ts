@@ -11,6 +11,7 @@ import { AllocatableStruct, f32, f64, i16, i32, i64, i8, Struct, u16, u32, u64, 
 import {
   ArrayOrder,
   BitmapOrder,
+  bool,
   EventType,
   InitFlags,
   Keycode,

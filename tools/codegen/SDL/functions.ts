@@ -435,6 +435,37 @@ export const functions: CodeGenFunctions = {
     },
   },
 
+  SDL_HasIntersection: {
+    parameters: {
+      A: {
+        type: "SDL_Rect*",
+      },
+      B: {
+        type: "SDL_Rect*",
+      }
+    },
+    result: {
+      type: "SDL_bool"
+    }
+  },
+
+  SDL_IntersectRect: {
+    parameters: {
+      A: {
+        type: "SDL_Rect*",
+      },
+      B: {
+        type: "SDL_Rect*",
+      },
+      result: {
+        type: "SDL_Rect*",
+      }
+    },
+    result: {
+      type: "SDL_bool"
+    }
+  },
+
   SDL_Init: {
     parameters: {
       flags: {

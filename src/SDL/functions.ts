@@ -13,6 +13,7 @@ import { symbols } from "./_symbols.ts";
 import {
   ArrayOrder,
   BitmapOrder,
+  bool,
   EventType,
   InitFlags,
   Keycode,
@@ -345,6 +346,18 @@ export function GetWindowTitle(
   return Platform.fromPlatformString(_library.symbols.SDL_GetWindowTitle(
     Platform.toPlatformPointer(Pointer.of(window)),
   ) as PlatformPointer<unknown>);
+}
+
+export function IntersectRect(
+  A: PointerLike<Rect>,
+  B: PointerLike<Rect>,
+  result: PointerLike<Rect>,
+): bool {
+  return _library.symbols.SDL_IntersectRect(
+    Platform.toPlatformPointer(Pointer.of(A)),
+    Platform.toPlatformPointer(Pointer.of(B)),
+    Platform.toPlatformPointer(Pointer.of(result)),
+  ) as bool;
 }
 
 export function Init(flags: InitFlags, libraryPath?: string): number;

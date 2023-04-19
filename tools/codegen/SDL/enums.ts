@@ -21,6 +21,13 @@ export const enums: CodeGenEnums = {
     },
   },
 
+  SDL_bool: {
+    values: {
+      SDL_FALSE: "0",
+      SDL_TRUE: "1",
+    }
+  },
+
   SDL_EventType: {
     values: {
       SDL_FIRSTEVENT: "0",
