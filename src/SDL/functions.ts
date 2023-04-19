@@ -348,6 +348,16 @@ export function GetWindowTitle(
   ) as PlatformPointer<unknown>);
 }
 
+export function HasIntersection(
+  A: PointerLike<Rect>,
+  B: PointerLike<Rect>,
+): bool {
+  return _library.symbols.SDL_HasIntersection(
+    Platform.toPlatformPointer(Pointer.of(A)),
+    Platform.toPlatformPointer(Pointer.of(B)),
+  ) as bool;
+}
+
 export function IntersectRect(
   A: PointerLike<Rect>,
   B: PointerLike<Rect>,
