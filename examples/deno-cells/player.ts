@@ -126,6 +126,12 @@ export class Player {
   }
 
   checkCollisionAndBounce(): void {
+    const hitbox = new SDL.Rect(
+      this.worldRect.x,
+      this.worldRect.y,
+      this.worldRect.w,
+      this.worldRect.h
+    )
     for (const tile of this.level.tiles) {
       if (!tile.dstrect || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
         continue;
