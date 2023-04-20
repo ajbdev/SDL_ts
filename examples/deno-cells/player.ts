@@ -20,25 +20,28 @@ interface Animation {
   start: Vector;
   size: Vector;
   frames: number;
+  hitbox: SDL.Rect;
   once?: boolean;
   delay?: number;
 }
 
 const Animations = {
-  [AnimationState.Idle]: { start: vec(0, 0), size: vec(48, 48), frames: 10 },
-  [AnimationState.Running]: { start: vec(0, 48), size: vec(48, 48), frames: 8 },
+  [AnimationState.Idle]: { start: vec(0, 0), size: vec(48, 48), frames: 10, hitbox: new SDL.Rect(11, 8, 17, 29) },
+  [AnimationState.Running]: { start: vec(0, 48), size: vec(48, 48), frames: 8, hitbox: new SDL.Rect(11, 8, 21, 29) },
   [AnimationState.Slash]: {
     start: vec(0, 96),
     size: vec(64, 64),
     frames: 6,
     once: true,
-    delay: 60
+    delay: 60,
+    hitbox: new SDL.Rect(22, 17, 17, 28)
   },
   [AnimationState.Stab]: {
     start: vec(0, 160),
     size: vec(96, 48),
     frames: 7,
     once: true,
+    hitbox: new SDL.Rect(22, 17, 17, 29)
   },
 } as const;
 
@@ -49,7 +52,6 @@ export class Player {
   private isAttacking = false;
   private gravityVelocity = 0.5;
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
-  public readonly origin = vec(48, 48);
   public readonly animRect: SDL.Rect;
   public readonly worldRect: SDL.Rect;
 
@@ -69,13 +71,8 @@ export class Player {
   }
 
   calcWorldRect(): void {
-    const offsetX = (this.origin.x - this.animRect.w) / 2;
-    const offsetY = (this.origin.y - this.animRect.h) / 2;
-
-    const snapToGrid = 6;
-
-    this.worldRect.x = this.position.x + offsetX + snapToGrid;
-    this.worldRect.y = this.position.y + offsetY + snapToGrid;
+    this.worldRect.x = this.position.x - this.animation.hitbox.x;
+    this.worldRect.y = this.position.y + this.animation.hitbox.y;
     this.worldRect.w = this.animRect.w;
     this.worldRect.h = this.animRect.h;
   }
@@ -131,19 +128,20 @@ export class Player {
       this.worldRect.y,
       this.worldRect.w,
       this.worldRect.h
-    )
+    );
+
     for (const tile of this.level.tiles) {
       if (!tile.dstrect || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
         continue;
       }
       if (SDL.HasIntersection(this.worldRect, tile.dstrect)) {
-        if (this.worldRect.y + this.worldRect.h > tile.dstrect.y) {
+        if (hitbox.y + hitbox.h >= tile.dstrect.y) {
           this.position.y = tile.dstrect.y - this.worldRect.h;
         }
 
-        if (this.worldRect.x + this.worldRect.w > tile.dstrect.x) {
+        // if (this.worldRect.x + this.worldRect.w > tile.dstrect.x) {
 
-        }
+        // }
 
         return;
       }
