@@ -2,25 +2,41 @@ import { SDL } from "SDL_ts";
 
 import { Vector, vec } from './util.ts';
 
-enum Tiles {
-  BLANK,
-  BRICK_N,
-  BRICK_NE,
-  BRICK_E,
-  BRICK_SE,
-  BRICK_S,
-  BRICK_SW,
-  BRICK_NW,
-  BRICK_W,
-  SLAB_N,
-}
+const Tiles = {
+  BLANK: 'BLANK',
+  BRICK_N: 'BRICK_N',
+  BRICK_NE: 'BRICK_NE',
+  BRICK_E: 'BRICK_E',
+  BRICK_SE: 'BRICK_SE',
+  BRICK_S: 'BRICK_S',
+  BRICK_SW: 'BRICK_SW',
+  BRICK_NW: 'BRICK_NW',
+  BRICK_W: 'BRICK_W',
+  SLAB_N: 'SLAB_N',
+} as const;
 
-enum Flag {
+type Tiles = keyof typeof Tiles;
+
+export enum TileFlag {
   BOUNDARY
 }
 
-export const TileFlags = {
-  [Tiles.BRICK_N]: [ Flag.BOUNDARY ]
+const TileFlags: { [key in Tiles]?: TileFlag[] } = {
+  [Tiles.BRICK_N]: [TileFlag.BOUNDARY],
+  [Tiles.BRICK_NE]: [TileFlag.BOUNDARY],
+  [Tiles.BRICK_E]: [TileFlag.BOUNDARY],
+  [Tiles.BRICK_W]: [TileFlag.BOUNDARY],
+  [Tiles.SLAB_N]: [TileFlag.BOUNDARY],
+};
+
+export function getTileFlags(tile: Tile): TileFlag[] | null {
+  return TileFlags[tile.label] ?? null;
+}
+
+export function tileHasFlag(tile: Tile, flag: TileFlag): boolean {
+  const flags = getTileFlags(tile);
+
+  return !!flags && flags.indexOf(flag) > -1;
 }
 
 interface Tile {

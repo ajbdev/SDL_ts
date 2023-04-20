@@ -1,7 +1,7 @@
 import { SDL } from "SDL_ts";
 
 import { Vector, clamp, vec } from './util.ts';
-import { Level } from "./level.ts";
+import { TileFlag, Level, tileHasFlag } from "./level.ts";
 
 const AnimationState = {
   Idle: "Idle",
@@ -127,12 +127,16 @@ export class Player {
 
   checkCollisionAndBounce(): void {
     for (const tile of this.level.tiles) {
-      if (!tile.dstrect) {
+      if (!tile.dstrect || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
         continue;
       }
       if (SDL.HasIntersection(this.worldRect, tile.dstrect)) {
         if (this.worldRect.y + this.worldRect.h > tile.dstrect.y) {
           this.position.y = tile.dstrect.y - this.worldRect.h;
+        }
+
+        if (this.worldRect.x + this.worldRect.w > tile.dstrect.x) {
+
         }
 
         return;
