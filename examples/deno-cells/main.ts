@@ -54,6 +54,7 @@ function main(): number {
 
   let done = false;
   let lastTick;
+  let showHitBox = false;
 
   const level = new Level(levelTexture);
 
@@ -73,6 +74,10 @@ function main(): number {
 
         if (Object.hasOwn(keys, k)) {
           keys[k] = event.type === SDL.EventType.KEYDOWN ? true : false;
+        }
+
+        if (event.type === SDL.EventType.KEYDOWN && k === 'L') {
+          showHitBox = !showHitBox;
         }
       }
     }
@@ -107,28 +112,31 @@ function main(): number {
 
     const hitbox = player.hitbox;
 
-    // SDL.RenderDrawLine(
-    //   renderer,
-    //   0,
-    //   hitbox.y,
-    //   WINDOW_WIDTH,
-    //   hitbox.y
-    // );
-    // SDL.RenderDrawLine(
-    //   renderer,
-    //   0,
-    //   hitbox.y + hitbox.h,
-    //   WINDOW_WIDTH,
-    //   hitbox.y + hitbox.h
-    // );
-    // SDL.RenderDrawLine(
-    //   renderer,
-    //   hitbox.x + hitbox.w,
-    //   0,
-    //   hitbox.x + hitbox.w,
-    //   WINDOW_HEIGHT
-    // );
-    // SDL.RenderDrawLine(renderer, hitbox.x, 0, hitbox.x, WINDOW_HEIGHT);
+    if (showHitBox) {
+      SDL.RenderDrawLine(
+        renderer,
+        0,
+        hitbox.y,
+        WINDOW_WIDTH,
+        hitbox.y
+      );
+      SDL.RenderDrawLine(
+        renderer,
+        0,
+        hitbox.y + hitbox.h,
+        WINDOW_WIDTH,
+        hitbox.y + hitbox.h
+      );
+      SDL.RenderDrawLine(
+        renderer,
+        hitbox.x + hitbox.w,
+        0,
+        hitbox.x + hitbox.w,
+        WINDOW_HEIGHT
+      );
+      SDL.RenderDrawLine(renderer, hitbox.x, 0, hitbox.x, WINDOW_HEIGHT);
+    }
+
     
     SDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL.RenderPresent(renderer);

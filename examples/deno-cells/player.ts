@@ -33,14 +33,14 @@ const Animations = {
     size: vec(48, 48),
     frames: 10,
     hitbox: new SDL.Rect(14, 11, 17, 29),
-    anchor: vec(14, 9),
+    anchor: vec(14, 8),
   },
   [AnimationState.Running]: {
     start: vec(0, 48),
     size: vec(48, 48),
     frames: 8,
-    hitbox: new SDL.Rect(11, 8, 21, 29),
-    anchor: vec(14, 9),
+    hitbox: new SDL.Rect(12, 11, 21, 29),
+    anchor: vec(14, 8),
   },
   [AnimationState.Slash]: {
     start: vec(0, 96),
@@ -49,7 +49,7 @@ const Animations = {
     once: true,
     delay: 60,
     hitbox: new SDL.Rect(20, 19, 18, 28),
-    anchor: vec(22, 17),
+    anchor: vec(22, 0),
   },
   [AnimationState.Stab]: {
     start: vec(0, 160),
@@ -124,7 +124,7 @@ export class Player {
 
     this.position.x += this.runVelocity * (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) * .1;
 
-    //this.position.y += this.gravityVelocity;
+    this.position.y += this.gravityVelocity;
 
     this.checkCollisionAndBounce();
 
@@ -148,6 +148,7 @@ export class Player {
   }
 
   checkCollisionAndBounce(): void {
+    // todo: forward looking collision detection, e.g., nextY and nextX
     const hitbox = this.hitbox;
 
     for (const tile of this.level.tiles) {
@@ -155,6 +156,8 @@ export class Player {
         continue;
       }
       if (SDL.HasIntersection(hitbox, tile.dstrect)) {
+        console.log('colliision');
+
         if (hitbox.y + hitbox.h >= tile.dstrect.y) {
           this.position.y = tile.dstrect.y - this.worldRect.h;
         }
