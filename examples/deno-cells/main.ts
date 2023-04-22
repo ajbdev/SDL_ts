@@ -101,7 +101,36 @@ function main(): number {
 
     const center = new SDL.Point(player.worldRect.w / 2, player.worldRect.h / 2);
 
+
     SDL.RenderCopyEx(renderer, player.texture, player.animRect, player.worldRect, 0, center, player.flip);
+    SDL.SetRenderDrawColor(renderer, 255, 0, 0, 255);
+
+    const hitbox = player.hitbox;
+
+    // SDL.RenderDrawLine(
+    //   renderer,
+    //   0,
+    //   hitbox.y,
+    //   WINDOW_WIDTH,
+    //   hitbox.y
+    // );
+    // SDL.RenderDrawLine(
+    //   renderer,
+    //   0,
+    //   hitbox.y + hitbox.h,
+    //   WINDOW_WIDTH,
+    //   hitbox.y + hitbox.h
+    // );
+    // SDL.RenderDrawLine(
+    //   renderer,
+    //   hitbox.x + hitbox.w,
+    //   0,
+    //   hitbox.x + hitbox.w,
+    //   WINDOW_HEIGHT
+    // );
+    // SDL.RenderDrawLine(renderer, hitbox.x, 0, hitbox.x, WINDOW_HEIGHT);
+    
+    SDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
 

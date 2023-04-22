@@ -23,25 +23,41 @@ interface Animation {
   hitbox: SDL.Rect;
   once?: boolean;
   delay?: number;
+  anchor: Vector;
 }
 
+
 const Animations = {
-  [AnimationState.Idle]: { start: vec(0, 0), size: vec(48, 48), frames: 10, hitbox: new SDL.Rect(11, 8, 17, 29) },
-  [AnimationState.Running]: { start: vec(0, 48), size: vec(48, 48), frames: 8, hitbox: new SDL.Rect(11, 8, 21, 29) },
+  [AnimationState.Idle]: {
+    start: vec(0, 0),
+    size: vec(48, 48),
+    frames: 10,
+    hitbox: new SDL.Rect(14, 11, 17, 29),
+    anchor: vec(14, 9),
+  },
+  [AnimationState.Running]: {
+    start: vec(0, 48),
+    size: vec(48, 48),
+    frames: 8,
+    hitbox: new SDL.Rect(11, 8, 21, 29),
+    anchor: vec(14, 9),
+  },
   [AnimationState.Slash]: {
     start: vec(0, 96),
     size: vec(64, 64),
     frames: 6,
     once: true,
     delay: 60,
-    hitbox: new SDL.Rect(22, 17, 17, 28)
+    hitbox: new SDL.Rect(20, 19, 18, 28),
+    anchor: vec(22, 17),
   },
   [AnimationState.Stab]: {
     start: vec(0, 160),
     size: vec(96, 48),
     frames: 7,
     once: true,
-    hitbox: new SDL.Rect(22, 17, 17, 29)
+    hitbox: new SDL.Rect(22, 17, 17, 29),
+    anchor: vec(22, 17),
   },
 } as const;
 
@@ -71,8 +87,8 @@ export class Player {
   }
 
   calcWorldRect(): void {
-    this.worldRect.x = this.position.x - this.animation.hitbox.x;
-    this.worldRect.y = this.position.y + this.animation.hitbox.y;
+    this.worldRect.x = this.position.x - this.animation.anchor.x;
+    this.worldRect.y = this.position.y + this.animation.anchor.y;
     this.worldRect.w = this.animRect.w;
     this.worldRect.h = this.animRect.h;
   }
@@ -108,7 +124,7 @@ export class Player {
 
     this.position.x += this.runVelocity * (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) * .1;
 
-    this.position.y += this.gravityVelocity;
+    //this.position.y += this.gravityVelocity;
 
     this.checkCollisionAndBounce();
 
@@ -122,19 +138,23 @@ export class Player {
     }
   }
 
-  checkCollisionAndBounce(): void {
-    const hitbox = new SDL.Rect(
-      this.worldRect.x,
-      this.worldRect.y,
-      this.worldRect.w,
-      this.worldRect.h
+  get hitbox(): SDL.Rect {
+    return new SDL.Rect(
+      this.worldRect.x + this.animation.hitbox.x,
+      this.worldRect.y + this.animation.hitbox.y,
+      this.animation.hitbox.w,
+      this.animation.hitbox.h
     );
+  }
+
+  checkCollisionAndBounce(): void {
+    const hitbox = this.hitbox;
 
     for (const tile of this.level.tiles) {
       if (!tile.dstrect || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
         continue;
       }
-      if (SDL.HasIntersection(this.worldRect, tile.dstrect)) {
+      if (SDL.HasIntersection(hitbox, tile.dstrect)) {
         if (hitbox.y + hitbox.h >= tile.dstrect.y) {
           this.position.y = tile.dstrect.y - this.worldRect.h;
         }
