@@ -63,7 +63,7 @@ const Animations = {
 
 export class Player {
   private animationState: AnimationState = AnimationState.Idle;
-  private position = vec(0, 0);
+  private position = { ...vec(0, 0), previous: vec(0, 0) };
   private runVelocity = 0;
   private isAttacking = false;
   private gravityVelocity = 0.5;
@@ -122,8 +122,9 @@ export class Player {
       this.changeAnimation(AnimationState.Running);
     } 
 
+    this.position.previous.x = this.position.x;
+    this.position.previous.y = this.position.y;
     this.position.x += this.runVelocity * (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) * .1;
-
     this.position.y += this.gravityVelocity;
 
     this.checkCollisionAndBounce();
@@ -148,7 +149,6 @@ export class Player {
   }
 
   checkCollisionAndBounce(): void {
-    // todo: forward looking collision detection, e.g., nextY and nextX
     const hitbox = this.hitbox;
 
     for (const tile of this.level.tiles) {
@@ -156,10 +156,9 @@ export class Player {
         continue;
       }
       if (SDL.HasIntersection(hitbox, tile.dstrect)) {
-        console.log('colliision');
 
         if (hitbox.y + hitbox.h >= tile.dstrect.y) {
-          this.position.y = tile.dstrect.y - this.worldRect.h;
+          this.position.y = this.position.previous.y;
         }
 
         // if (this.worldRect.x + this.worldRect.w > tile.dstrect.x) {
