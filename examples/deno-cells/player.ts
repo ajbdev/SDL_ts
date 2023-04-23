@@ -48,7 +48,7 @@ const Animations = {
     frames: 6,
     once: true,
     delay: 60,
-    hitbox: new SDL.Rect(20, 18, 18, 27),
+    hitbox: new SDL.Rect(20, 18, 18, 29),
     anchor: vec(22, 0),
   },
   [AnimationState.Stab]: {
@@ -122,13 +122,16 @@ export class Player {
 
       this.changeAnimation(AnimationState.Running);
     } 
+    
+    if (this.runVelocity === 0 && !this.isAttacking) {
+      this.changeAnimation(AnimationState.Idle);
+    }
+    this.calcWorldRect();
 
     this.velocity.x =
       this.runVelocity *
       (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) *
       0.1;
-
-    console.log(this.position.y);
 
     this.velocity.y = this.gravityVelocity;
 
@@ -137,11 +140,6 @@ export class Player {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
 
-    this.calcWorldRect();
-
-    if (this.runVelocity === 0 && !this.isAttacking) {
-      this.changeAnimation(AnimationState.Idle);
-    }
     if (this.runVelocity > 0) {
       this.runVelocity = clamp(this.runVelocity - 2.5, 0, 15);
     }
@@ -167,38 +165,14 @@ export class Player {
         continue;
       }
       if (SDL.HasIntersection(hitbox, tile.dstrect)) {
+        console.log(tile.label);
         if (hitbox.y + hitbox.h >= tile.dstrect.y) {
           this.velocity.y = 0;
+          continue;
+        } 
+        if (hitbox.x + hitbox.w >= tile.dstrect.x) {
+          this.velocity.x = 0;
         }
-      }
-    }
-  }
-
-  checkCollisionAndBounce(): void {
-    const hitbox = this.hitbox;
-
-    for (const tile of this.level.tiles) {
-      if (!tile.dstrect || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
-        continue;
-      }
-      if (SDL.HasIntersection(hitbox, tile.dstrect)) {
-        const rect = new SDL.Rect(0,0,0,0);
-        SDL.IntersectRect(hitbox, tile.dstrect, rect);
-        // console.log(rect.x, rect.y, rect.w, rect.h);
-        
-        // if (hitbox.y + hitbox.h + 1 >= tile.dstrect.y) {
-        //   this.position.y = this.position.previous.y - 1;
-        // }
-        
-        // if (this.worldRect.x + this.worldRect.w + 1 > tile.dstrect.x) {
-        //   this.position.x = this.position.previous.x - 1;
-        // }
-        
-        // if (this.worldRect.x < tile.dstrect.x + tile.dstrect.w) {
-        //   this.position.x = this.position.previous.x + 1;
-        // }
-
-        return;
       }
     }
   }
