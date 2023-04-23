@@ -48,7 +48,7 @@ const Animations = {
     frames: 6,
     once: true,
     delay: 60,
-    hitbox: new SDL.Rect(20, 19, 18, 28),
+    hitbox: new SDL.Rect(20, 18, 18, 27),
     anchor: vec(22, 0),
   },
   [AnimationState.Stab]: {
@@ -63,10 +63,11 @@ const Animations = {
 
 export class Player {
   private animationState: AnimationState = AnimationState.Idle;
-  private position = { ...vec(0, 0), previous: vec(0, 0) };
+  private position = { ...vec(0, 0) };
   private runVelocity = 0;
   private isAttacking = false;
   private gravityVelocity = 0.5;
+  private velocity = vec(0,0);
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
   public readonly animRect: SDL.Rect;
   public readonly worldRect: SDL.Rect;
@@ -108,7 +109,7 @@ export class Player {
       }
     }
 
-    if (this.keys.Space) {
+    if (this.keys.Return) {
       this.attack();
     } else if ((this.keys.D || this.keys.Right) && !this.isAttacking) {
       this.runVelocity = 5;
@@ -122,12 +123,19 @@ export class Player {
       this.changeAnimation(AnimationState.Running);
     } 
 
-    this.position.previous.x = this.position.x;
-    this.position.previous.y = this.position.y;
-    this.position.x += this.runVelocity * (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) * .1;
-    this.position.y += this.gravityVelocity;
+    this.velocity.x =
+      this.runVelocity *
+      (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) *
+      0.1;
 
-    this.checkCollisionAndBounce();
+    console.log(this.position.y);
+
+    this.velocity.y = this.gravityVelocity;
+
+    this.checkCollision();
+
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
 
     this.calcWorldRect();
 
@@ -148,6 +156,24 @@ export class Player {
     );
   }
 
+  checkCollision(): void {
+    const hitbox = this.hitbox;
+
+    hitbox.y += this.velocity.y;
+    hitbox.x += this.velocity.x;
+
+    for (const tile of this.level.tiles) {
+      if (!tile.dstrect || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
+        continue;
+      }
+      if (SDL.HasIntersection(hitbox, tile.dstrect)) {
+        if (hitbox.y + hitbox.h >= tile.dstrect.y) {
+          this.velocity.y = 0;
+        }
+      }
+    }
+  }
+
   checkCollisionAndBounce(): void {
     const hitbox = this.hitbox;
 
@@ -156,13 +182,20 @@ export class Player {
         continue;
       }
       if (SDL.HasIntersection(hitbox, tile.dstrect)) {
-
-        if (hitbox.y + hitbox.h >= tile.dstrect.y) {
-          this.position.y = this.position.previous.y;
-        }
-
-        // if (this.worldRect.x + this.worldRect.w > tile.dstrect.x) {
-
+        const rect = new SDL.Rect(0,0,0,0);
+        SDL.IntersectRect(hitbox, tile.dstrect, rect);
+        // console.log(rect.x, rect.y, rect.w, rect.h);
+        
+        // if (hitbox.y + hitbox.h + 1 >= tile.dstrect.y) {
+        //   this.position.y = this.position.previous.y - 1;
+        // }
+        
+        // if (this.worldRect.x + this.worldRect.w + 1 > tile.dstrect.x) {
+        //   this.position.x = this.position.previous.x - 1;
+        // }
+        
+        // if (this.worldRect.x < tile.dstrect.x + tile.dstrect.w) {
+        //   this.position.x = this.position.previous.x + 1;
         // }
 
         return;

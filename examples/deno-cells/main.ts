@@ -19,7 +19,7 @@ function main(): number {
   const rendererBox = new Box<Pointer<SDL.Renderer>>(Pointer);
 
   // Just the keys we care about
-  const keys: KeyMap = ['W','A','S','D','Space','Left','Right'].reduce((acc, key) => ({...acc, [key]: false}), {})
+  const keys: KeyMap = ['W','A','S','D','Space','Left','Right','Return'].reduce((acc, key) => ({...acc, [key]: false}), {})
 
   SDL.CreateWindowAndRenderer(
     WINDOW_WIDTH,
@@ -59,7 +59,6 @@ function main(): number {
   const level = new Level(levelTexture);
 
   const player = new Player(playerTexture, keys, level);
-
 
   while (!done) {
     while (SDL.PollEvent(event) != 0) {
@@ -105,7 +104,6 @@ function main(): number {
     }
 
     const center = new SDL.Point(player.worldRect.w / 2, player.worldRect.h / 2);
-
 
     SDL.RenderCopyEx(renderer, player.texture, player.animRect, player.worldRect, 0, center, player.flip);
     SDL.SetRenderDrawColor(renderer, 255, 0, 0, 255);
