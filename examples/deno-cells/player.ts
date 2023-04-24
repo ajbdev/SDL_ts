@@ -1,7 +1,8 @@
 import { SDL } from "SDL_ts";
 
-import { Vector, clamp, vec } from './util.ts';
+import { Vector, clamp, vec } from "./util.ts";
 import { TileFlag, Level, tileHasFlag } from "./level.ts";
+import { STRUCT_NO_ALLOCATE } from "../../src/_structs.ts";
 
 const AnimationState = {
   Idle: "Idle",
@@ -10,10 +11,10 @@ const AnimationState = {
   Stab: "Stab",
 } as const;
 
-type AnimationState = typeof AnimationState[keyof typeof AnimationState];
+type AnimationState = (typeof AnimationState)[keyof typeof AnimationState];
 
 interface KeyMap {
-  [key: string]: boolean
+  [key: string]: boolean;
 }
 
 interface Animation {
@@ -25,7 +26,6 @@ interface Animation {
   delay?: number;
   anchor: Vector;
 }
-
 
 const Animations = {
   [AnimationState.Idle]: {
@@ -61,18 +61,39 @@ const Animations = {
   },
 } as const;
 
+interface Edge {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+const rectToEdge = (rect: SDL.Rect) => ({
+  left: rect.x,
+  top: rect.y,
+  right: rect.x + rect.w,
+  bottom: rect.y + rect.h,
+});
+
+const determineCollisionEdge = (a: Edge, b: Edge) => {};
+
 export class Player {
   private animationState: AnimationState = AnimationState.Idle;
   private position = { ...vec(0, 0) };
   private runVelocity = 0;
   private isAttacking = false;
   private gravityVelocity = 0.5;
-  private velocity = vec(0,0);
+  public collisionRect = new SDL.Rect(0,0,0,0);
+  private velocity = vec(0, 0);
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
   public readonly animRect: SDL.Rect;
   public readonly worldRect: SDL.Rect;
 
-  constructor(public readonly texture: SDL.Texture, private readonly keys: KeyMap, private readonly level: Level) {
+  constructor(
+    public readonly texture: SDL.Texture,
+    private readonly keys: KeyMap,
+    private readonly level: Level
+  ) {
     this.animRect = new SDL.Rect(
       this.animation.start.x,
       this.animation.start.y,
@@ -121,8 +142,8 @@ export class Player {
       this.flip = SDL.RendererFlip.HORIZONTAL;
 
       this.changeAnimation(AnimationState.Running);
-    } 
-    
+    }
+
     if (this.runVelocity === 0 && !this.isAttacking) {
       this.changeAnimation(AnimationState.Idle);
     }
@@ -160,16 +181,31 @@ export class Player {
     hitbox.y += this.velocity.y;
     hitbox.x += this.velocity.x;
 
+    console.log('---');
+
     for (const tile of this.level.tiles) {
       if (!tile.dstrect || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
         continue;
       }
       if (SDL.HasIntersection(hitbox, tile.dstrect)) {
-        console.log(tile.label);
+        SDL.IntersectRect(hitbox, tile.dstrect, this.collisionRect);
+
+        const hitEdges = rectToEdge(hitbox)
+
+        const colEdges = rectToEdge(tile.dstrect);
+
+        console.log('HITBOX', hitEdges);
+        console.log(tile.label, colEdges);
+        console.log('OVERLAP', { x: this.collisionRect.x, y: this.collisionRect.y, w: this.collisionRect.w, h: this.collisionRect.h });
+
+        if (hitEdges.right > colEdges.left && hitEdges.bottom > colEdges.top) {
+          
+        }
+
         if (hitbox.y + hitbox.h >= tile.dstrect.y) {
           this.velocity.y = 0;
           continue;
-        } 
+        }
         if (hitbox.x + hitbox.w >= tile.dstrect.x) {
           this.velocity.x = 0;
         }
@@ -178,9 +214,9 @@ export class Player {
   }
 
   attack(): void {
-      this.changeAnimation(AnimationState.Slash);
-      this.runVelocity = 0;
-      this.isAttacking = true;
+    this.changeAnimation(AnimationState.Slash);
+    this.runVelocity = 0;
+    this.isAttacking = true;
   }
 
   changeAnimation(state: AnimationState): void {

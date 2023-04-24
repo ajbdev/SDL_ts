@@ -8,7 +8,7 @@ const WINDOW_WIDTH = 1024;
 const WINDOW_HEIGHT = 768;
 
 interface KeyMap {
-  [key: string]: boolean
+  [key: string]: boolean;
 }
 
 function main(): number {
@@ -19,7 +19,18 @@ function main(): number {
   const rendererBox = new Box<Pointer<SDL.Renderer>>(Pointer);
 
   // Just the keys we care about
-  const keys: KeyMap = ['W','A','S','D','Space','Left','Right','Return'].reduce((acc, key) => ({...acc, [key]: false}), {})
+  const keys: KeyMap = [
+    "W",
+    "A",
+    "S",
+    "D",
+    "T",
+    "C",
+    "Space",
+    "Left",
+    "Right",
+    "Return",
+  ].reduce((acc, key) => ({ ...acc, [key]: false }), {});
 
   SDL.CreateWindowAndRenderer(
     WINDOW_WIDTH,
@@ -55,6 +66,8 @@ function main(): number {
   let done = false;
   let lastTick;
   let showHitBox = false;
+  let showTileRect = false;
+  let showCollisionRect = false;
 
   const level = new Level(levelTexture);
 
@@ -75,13 +88,21 @@ function main(): number {
           keys[k] = event.type === SDL.EventType.KEYDOWN ? true : false;
         }
 
-        if (event.type === SDL.EventType.KEYDOWN && k === 'L') {
+        if (event.type === SDL.EventType.KEYDOWN && k === "L") {
           showHitBox = !showHitBox;
+        }
+
+        if (event.type === SDL.EventType.KEYDOWN && k === "T") {
+          showTileRect = !showTileRect;
+        }
+
+        if (event.type === SDL.EventType.KEYDOWN && k === "C") {
+          showCollisionRect = !showCollisionRect;
         }
       }
     }
 
-    const tick = performance.now(); // Is this the highest resolution method of acquiring tick in deno?
+    const tick = performance.now();
 
     if (lastTick != tick) {
       player.update(tick);
@@ -90,34 +111,38 @@ function main(): number {
 
     SDL.RenderClear(renderer);
 
+    SDL.SetRenderDrawColor(renderer, 0, 255, 0, 255);
     for (const tile of level.tiles) {
       if (!tile.dstrect) {
         continue;
       }
 
-      SDL.RenderCopy(
-        renderer,
-        level.texture,
-        tile.srcrect,
-        tile.dstrect
-      );
+      SDL.RenderCopy(renderer, level.texture, tile.srcrect, tile.dstrect);
+      if (showTileRect) {
+        SDL.RenderDrawRect(renderer, tile.dstrect);
+      }
     }
 
-    const center = new SDL.Point(player.worldRect.w / 2, player.worldRect.h / 2);
+    const center = new SDL.Point(
+      player.worldRect.w / 2,
+      player.worldRect.h / 2
+    );
 
-    SDL.RenderCopyEx(renderer, player.texture, player.animRect, player.worldRect, 0, center, player.flip);
+    SDL.RenderCopyEx(
+      renderer,
+      player.texture,
+      player.animRect,
+      player.worldRect,
+      0,
+      center,
+      player.flip
+    );
     SDL.SetRenderDrawColor(renderer, 255, 0, 0, 255);
 
     const hitbox = player.hitbox;
 
     if (showHitBox) {
-      SDL.RenderDrawLine(
-        renderer,
-        0,
-        hitbox.y,
-        WINDOW_WIDTH,
-        hitbox.y
-      );
+      SDL.RenderDrawLine(renderer, 0, hitbox.y, WINDOW_WIDTH, hitbox.y);
       SDL.RenderDrawLine(
         renderer,
         0,
@@ -135,11 +160,14 @@ function main(): number {
       SDL.RenderDrawLine(renderer, hitbox.x, 0, hitbox.x, WINDOW_HEIGHT);
     }
 
-    
+    if (showCollisionRect) {
+      SDL.SetRenderDrawColor(renderer, 255, 255, 0, 255);
+      SDL.RenderDrawRect(renderer, player.collisionRect);
+    }
+
     SDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
-
   }
 
   SDL.DestroyWindow(window);
