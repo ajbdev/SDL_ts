@@ -1,7 +1,7 @@
 import { SDL } from "SDL_ts";
 
-import { Vector, clamp, vec } from "./util.ts";
-import { TileFlag, Level, tileHasFlag } from "./level.ts";
+import { clamp, vec, Vector } from "./util.ts";
+import { Level, TileFlag, tileHasFlag } from "./level.ts";
 import { STRUCT_NO_ALLOCATE } from "../../src/_structs.ts";
 
 const AnimationState = {
@@ -61,29 +61,43 @@ const Animations = {
   },
 } as const;
 
-interface Edge {
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
+const Edge = {
+  Left: "Left",
+  Right: "Right",
+  Top: "Top",
+  Bottom: "Bottom",
+} as const;
+
+type Edge = keyof typeof Edge;
+
+function detectCollisionEdge(a: SDL.Rect, b: SDL.Rect): Edge | undefined {
+  const distanceX = (a.x + a.w / 2) - (b.x + b.w / 2);
+  const distanceY = (a.y + a.h / 2) - (b.y + b.h / 2);
+
+  const halfWidth = (a.w + b.w) / 2;
+  const halfHeight = (a.h + b.h) / 2;
+
+  if (Math.abs(distanceX) < halfWidth && Math.abs(distanceY) < halfHeight) {
+    const overlapX = halfWidth - Math.abs(distanceX);
+    const overlapY = halfHeight - Math.abs(distanceY);
+
+    if (overlapX >= overlapY) {
+      return distanceY > 0 ? Edge.Top : Edge.Bottom;
+    } else {
+      return distanceX > 0 ? Edge.Left : Edge.Right;
+    }
+  }
 }
-
-const rectToEdge = (rect: SDL.Rect) => ({
-  left: rect.x,
-  top: rect.y,
-  right: rect.x + rect.w,
-  bottom: rect.y + rect.h,
-});
-
-const determineCollisionEdge = (a: Edge, b: Edge) => {};
 
 export class Player {
   private animationState: AnimationState = AnimationState.Idle;
   private position = { ...vec(0, 0) };
   private runVelocity = 0;
   private isAttacking = false;
-  private gravityVelocity = 0.5;
-  public collisionRect = new SDL.Rect(0,0,0,0);
+  private isGrounded = false;
+  private jumpVelocity = -5;
+  private gravityVelocity = 0.2;
+  public collisionRect = new SDL.Rect(0, 0, 0, 0);
   private velocity = vec(0, 0);
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
   public readonly animRect: SDL.Rect;
@@ -92,13 +106,13 @@ export class Player {
   constructor(
     public readonly texture: SDL.Texture,
     private readonly keys: KeyMap,
-    private readonly level: Level
+    private readonly level: Level,
   ) {
     this.animRect = new SDL.Rect(
       this.animation.start.x,
       this.animation.start.y,
       this.animation.size.x,
-      this.animation.size.y
+      this.animation.size.y,
     );
 
     this.worldRect = new SDL.Rect(0, 0, 0, 0);
@@ -142,6 +156,9 @@ export class Player {
       this.flip = SDL.RendererFlip.HORIZONTAL;
 
       this.changeAnimation(AnimationState.Running);
+    } if (this.keys.Space && !this.isAttacking && this.isGrounded) {
+      this.velocity.y = this.jumpVelocity;
+      this.isGrounded = false;
     }
 
     if (this.runVelocity === 0 && !this.isAttacking) {
@@ -149,12 +166,11 @@ export class Player {
     }
     this.calcWorldRect();
 
-    this.velocity.x =
-      this.runVelocity *
+    this.velocity.x = this.runVelocity *
       (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) *
       0.1;
 
-    this.velocity.y = this.gravityVelocity;
+    this.velocity.y = clamp(this.velocity.y + this.gravityVelocity, -8, 0.5);
 
     this.checkCollision();
 
@@ -171,7 +187,7 @@ export class Player {
       this.worldRect.x + this.animation.hitbox.x,
       this.worldRect.y + this.animation.hitbox.y,
       this.animation.hitbox.w,
-      this.animation.hitbox.h
+      this.animation.hitbox.h,
     );
   }
 
@@ -181,8 +197,6 @@ export class Player {
     hitbox.y += this.velocity.y;
     hitbox.x += this.velocity.x;
 
-    console.log('---');
-
     for (const tile of this.level.tiles) {
       if (!tile.dstrect || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
         continue;
@@ -190,23 +204,22 @@ export class Player {
       if (SDL.HasIntersection(hitbox, tile.dstrect)) {
         SDL.IntersectRect(hitbox, tile.dstrect, this.collisionRect);
 
-        const hitEdges = rectToEdge(hitbox)
+        const edge = detectCollisionEdge(hitbox, tile.dstrect);
 
-        const colEdges = rectToEdge(tile.dstrect);
-
-        console.log('HITBOX', hitEdges);
-        console.log(tile.label, colEdges);
-        console.log('OVERLAP', { x: this.collisionRect.x, y: this.collisionRect.y, w: this.collisionRect.w, h: this.collisionRect.h });
-
-        if (hitEdges.right > colEdges.left && hitEdges.bottom > colEdges.top) {
-          
-        }
-
-        if (hitbox.y + hitbox.h >= tile.dstrect.y) {
+        if (edge === Edge.Top && this.velocity.y < 0) {
           this.velocity.y = 0;
-          continue;
         }
-        if (hitbox.x + hitbox.w >= tile.dstrect.x) {
+
+        if (edge === Edge.Bottom && this.velocity.y > 0) {
+          this.velocity.y = 0;
+          this.isGrounded = true;
+        }
+
+        if (edge === Edge.Left && this.velocity.x < 0) {
+          this.velocity.x = 0;
+        }
+
+        if (edge === Edge.Right && this.velocity.x > 0) {
           this.velocity.x = 0;
         }
       }
