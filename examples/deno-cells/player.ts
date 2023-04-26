@@ -48,7 +48,7 @@ const Animations = {
     frames: 6,
     once: true,
     delay: 60,
-    hitbox: new SDL.Rect(20, 18, 18, 29),
+    hitbox: new SDL.Rect(20, 18, 18, 30),
     anchor: vec(22, 0),
   },
   [AnimationState.Stab]: {

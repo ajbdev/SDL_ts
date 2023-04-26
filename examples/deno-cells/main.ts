@@ -7,11 +7,14 @@ import { Level } from "./level.ts";
 const WINDOW_WIDTH = 1024;
 const WINDOW_HEIGHT = 768;
 
+const FPS = 25;
+const SKIP_TICKS = 1000 / FPS;
+
 interface KeyMap {
   [key: string]: boolean;
 }
 
-function main(): number {
+async function main(): Promise<number> {
   SDL.Init(SDL.InitFlags.VIDEO);
   IMG.Init(IMG.InitFlags.PNG);
 
@@ -64,16 +67,24 @@ function main(): number {
   const event = new SDL.Event();
 
   let done = false;
-  let lastTick;
   let showHitBox = false;
   let showTileRect = false;
   let showCollisionRect = false;
+  let lastTick = 0;
 
   const level = new Level(levelTexture);
 
   const player = new Player(playerTexture, keys, level);
 
   while (!done) {
+    const tick = performance.now();
+
+    console.log(tick - lastTick)
+
+    player.update(tick);
+
+    lastTick = tick;
+
     while (SDL.PollEvent(event) != 0) {
       if (event.type === SDL.EventType.QUIT) {
         done = true;
@@ -100,13 +111,6 @@ function main(): number {
           showCollisionRect = !showCollisionRect;
         }
       }
-    }
-
-    const tick = performance.now();
-
-    if (lastTick != tick) {
-      player.update(tick);
-      lastTick = tick;
     }
 
     SDL.RenderClear(renderer);
@@ -168,6 +172,10 @@ function main(): number {
     SDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
+    
+    const skip = tick + SKIP_TICKS - performance.now();
+
+    sleep(skip);
   }
 
   SDL.DestroyWindow(window);
@@ -176,8 +184,16 @@ function main(): number {
   return 0;
 }
 
+// Non CPU blocking sleep method, more accurate than `await setTimeout` in testing
+function sleep(ms: number): void {
+  const sab = new SharedArrayBuffer(4);
+  const view = new Int32Array(sab);
+  Atomics.wait(view, 0, 0, ms);
+}
+
 try {
-  Deno.exit(main());
+  console.log('SKIP_TICKS', SKIP_TICKS)
+  Deno.exit(await main());
 } catch (error) {
   console.error(error);
   Deno.exit(1);
