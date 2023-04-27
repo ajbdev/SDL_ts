@@ -7,7 +7,7 @@ import { Level } from "./level.ts";
 const WINDOW_WIDTH = 1024;
 const WINDOW_HEIGHT = 768;
 
-const FPS = 25;
+const FPS = 60;
 const SKIP_TICKS = 1000 / FPS;
 
 interface KeyMap {
@@ -78,8 +78,6 @@ async function main(): Promise<number> {
 
   while (!done) {
     const tick = performance.now();
-
-    console.log(tick - lastTick)
 
     player.update(tick);
 
@@ -192,7 +190,6 @@ function sleep(ms: number): void {
 }
 
 try {
-  console.log('SKIP_TICKS', SKIP_TICKS)
   Deno.exit(await main());
 } catch (error) {
   console.error(error);

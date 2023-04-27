@@ -2,7 +2,6 @@ import { SDL } from "SDL_ts";
 
 import { clamp, vec, Vector } from "./util.ts";
 import { Level, TileFlag, tileHasFlag } from "./level.ts";
-import { STRUCT_NO_ALLOCATE } from "../../src/_structs.ts";
 
 const AnimationState = {
   Idle: "Idle",
@@ -32,14 +31,14 @@ const Animations = {
     start: vec(0, 0),
     size: vec(48, 48),
     frames: 10,
-    hitbox: new SDL.Rect(14, 11, 17, 29),
+    hitbox: new SDL.Rect(14, 11, 17, 28),
     anchor: vec(14, 8),
   },
   [AnimationState.Running]: {
     start: vec(0, 48),
     size: vec(48, 48),
     frames: 8,
-    hitbox: new SDL.Rect(12, 11, 21, 29),
+    hitbox: new SDL.Rect(12, 11, 21, 28),
     anchor: vec(14, 8),
   },
   [AnimationState.Slash]: {
@@ -56,7 +55,7 @@ const Animations = {
     size: vec(96, 48),
     frames: 7,
     once: true,
-    hitbox: new SDL.Rect(22, 17, 17, 29),
+    hitbox: new SDL.Rect(22, 17, 17, 28),
     anchor: vec(22, 17),
   },
 } as const;
@@ -95,10 +94,13 @@ export class Player {
   private runVelocity = 0;
   private isAttacking = false;
   private isGrounded = false;
-  private jumpVelocity = -5;
-  private gravityVelocity = 0.2;
+  private isJumping = false;
+  private jumpHeight = 50;
+  private gravityVelocity = 2 * this.jumpHeight / (60 ^ 2);
+  private jumpVelocity = Math.sqrt(2 * this.gravityVelocity * this.jumpHeight);
   public collisionRect = new SDL.Rect(0, 0, 0, 0);
   private velocity = vec(0, 0);
+  private nextAnimTick = 0;
   public flip: SDL.RendererFlip = SDL.RendererFlip.NONE;
   public readonly animRect: SDL.Rect;
   public readonly worldRect: SDL.Rect;
@@ -114,7 +116,6 @@ export class Player {
       this.animation.size.x,
       this.animation.size.y,
     );
-
     this.worldRect = new SDL.Rect(0, 0, 0, 0);
   }
 
@@ -132,7 +133,7 @@ export class Player {
   update(tick: number): void {
     const delay = this.animation.delay ?? 100;
 
-    if (tick % delay === 0) {
+    if (tick >= this.nextAnimTick) {
       this.animRect.x += this.animation.size.x;
 
       if (this.animRect.x >= this.animation.size.x * this.animation.frames) {
@@ -142,6 +143,8 @@ export class Player {
         }
         this.animRect.x = this.animation.start.x;
       }
+
+      this.nextAnimTick = tick + delay;
     }
 
     if (this.keys.Return) {
@@ -156,8 +159,9 @@ export class Player {
       this.flip = SDL.RendererFlip.HORIZONTAL;
 
       this.changeAnimation(AnimationState.Running);
-    } if (this.keys.Space && !this.isAttacking && this.isGrounded) {
-      this.velocity.y = this.jumpVelocity;
+    } if (this.keys.Space && !this.isAttacking && this.isGrounded && !this.isJumping) {
+      this.velocity.y -= this.jumpVelocity;
+      this.isJumping = true;
       this.isGrounded = false;
     }
 
@@ -167,10 +171,9 @@ export class Player {
     this.calcWorldRect();
 
     this.velocity.x = this.runVelocity *
-      (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1) *
-      0.1;
+      (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1)
 
-    this.velocity.y = clamp(this.velocity.y + this.gravityVelocity, -8, 0.5);
+    this.velocity.y = clamp(this.velocity.y + this.gravityVelocity, this.jumpVelocity*-1, this.gravityVelocity*2);
 
     this.checkCollision();
 
@@ -206,13 +209,20 @@ export class Player {
 
         const edge = detectCollisionEdge(hitbox, tile.dstrect);
 
-        if (edge === Edge.Top && this.velocity.y < 0) {
+        if (edge === Edge.Top && this.velocity.y < 0 && !this.isJumping) {
           this.velocity.y = 0;
         }
 
         if (edge === Edge.Bottom && this.velocity.y > 0) {
           this.velocity.y = 0;
           this.isGrounded = true;
+          this.isJumping = false;
+
+          if (this.hitbox.y + this.hitbox.h > tile.dstrect.y) {
+            // Sometimes the velocity causes the y position to round up to the next pixel which causes
+            // the player to be stuck in the ground when falling.
+            this.position.y += tile.dstrect.y - (this.hitbox.y + this.hitbox.h);
+          }
         }
 
         if (edge === Edge.Left && this.velocity.x < 0) {
