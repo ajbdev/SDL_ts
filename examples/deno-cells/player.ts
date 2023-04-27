@@ -221,6 +221,7 @@ export class Player {
           if (this.hitbox.y + this.hitbox.h > tile.dstrect.y) {
             // Sometimes the velocity causes the y position to round up to the next pixel which causes
             // the player to be stuck in the ground when falling.
+            // @todo: this needs to be implemented for left and right velocities as well
             this.position.y += tile.dstrect.y - (this.hitbox.y + this.hitbox.h);
           }
         }
