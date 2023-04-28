@@ -15,6 +15,26 @@ const Tiles = {
   SLAB_N: 'SLAB_N',
 } as const;
 
+    // this.tile(0, 0, Tiles.BLANK);
+    // this.tile(2, 1, Tiles.BRICK_N);
+    // this.tile(3, 1, Tiles.BRICK_NE);
+    // this.tile(3, 2, Tiles.BRICK_E);
+    // this.tile(1, 3, Tiles.BRICK_SW);
+    // this.tile(1, 2, Tiles.BRICK_W);
+    // this.tile(2, 5, Tiles.SLAB_N);
+const Tiles = {
+  BRICK: {
+    NW: [1,1],
+    N: [2,1],
+    NE: [3,1],
+    E: [3,2],
+    SW: [1,3],
+    W: [1,2],
+    S: [2,3],
+    SE: [3,3]
+  }
+}
+
 type Tiles = keyof typeof Tiles;
 
 export enum TileFlag {

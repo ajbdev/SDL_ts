@@ -150,12 +150,12 @@ export class Player {
     if (this.keys.Return) {
       this.attack();
     } else if ((this.keys.D || this.keys.Right) && !this.isAttacking) {
-      this.runVelocity = 5;
+      this.runVelocity = 4;
       this.flip = SDL.RendererFlip.NONE;
 
       this.changeAnimation(AnimationState.Running);
     } else if ((this.keys.A || this.keys.Left) && !this.isAttacking) {
-      this.runVelocity = 5;
+      this.runVelocity = 4;
       this.flip = SDL.RendererFlip.HORIZONTAL;
 
       this.changeAnimation(AnimationState.Running);
