@@ -18,14 +18,14 @@ type dirs = keyof typeof dirs;
 
 interface TileMapDefinition {
   type: TileMapType;
-  defs: {
+  coords: {
     [key in dirs]?: [number, number]
   }
 }
 
 const BRICK: TileMapDefinition = {
   type: TileMapType.AUTOTILE,
-  defs: {
+  coords: {
     NW: [1, 1],
     N: [2, 1],
     NE: [3, 1],
@@ -37,5 +37,17 @@ const BRICK: TileMapDefinition = {
   }
 }
 
+const definitions = {
+  BRICK: BRICK
+}
 
+interface PlacedTile {
+  def: keyof typeof definitions
+  adjacent: {
+    [keys in dirs]?: PlacedTile
+  }
+}
 
+function determineEdge(tile: PlacedTile) {
+  
+}
