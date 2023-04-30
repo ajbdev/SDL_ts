@@ -11,7 +11,6 @@ export interface Tile {
 
 export class TileMap {
   private tiles: Tile[] = [];
-  public readonly canvas: TileMapCanvas;
 
   constructor(public readonly tileset: TileSet) {
   }
