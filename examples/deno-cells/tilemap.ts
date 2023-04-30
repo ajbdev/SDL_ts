@@ -1,62 +1,60 @@
+import { TileSet, TileSetDefinitions } from "./tileset.ts";
+import { Vector } from "./util.ts";
+import { SDL } from "SDL_ts";
 
-enum TileMapType {
-  AUTOTILE,
+export interface Tile {
+  pos: Vector;
+  definition: TileSetDefinitions;
+  srcrect: SDL.Rect;
+  dstrect?: SDL.Rect;
 }
 
-const dirs = {
-  NW: 'NW',
-  N: 'N',
-  NE: 'NE',
-  E: 'E',
-  SE: 'SE',
-  S: 'S',
-  SW: 'SW',
-  W: 'W',
-  CENTER: 'CENTER'
-} as const;
+export class TileMap {
+  private tiles: Tile[] = [];
+  public readonly canvas: TileMapCanvas;
 
-type Dir = keyof typeof dirs;
+  constructor(public readonly tileset: TileSet) {
+  }
 
-interface TileMapDefinition {
-  type: TileMapType;
-  coords: {
-    [key in Dir]?: [number, number]
+  public retrieve(at: Vector): Tile | undefined {
+    return this.tiles.find(
+      (tile) => tile.pos.x === at.x && tile.pos.y === at.y,
+    );
+  }
+
+  public add(tile: Tile): void {
+    if (!this.retrieve(tile.pos)) {
+      this.tiles.push(tile);
+    }
   }
 }
 
-const BRICK: TileMapDefinition = {
-  type: TileMapType.AUTOTILE,
-  coords: {
-    CENTER: [2, 2],
-    NW: [1, 1],
-    N: [2, 1],
-    NE: [3, 1],
-    E: [3, 2],
-    SW: [1, 3],
-    W: [1, 2],
-    S: [2, 3],
-    SE: [3, 3],
-  },
-};
+class TileMapCanvas {
+  private definition: TileSetDefinitions;
+  constructor(private tileMap: TileMap) {
+    this.definition = tileMap.tileset.definitions[0];
+  }
 
-const definitions = {
-  BRICK: BRICK
-}
+  // Imperative function style so you can "draw" the tilemap like a canvas
+  setDefinition(def: TileSetDefinitions) {}
 
-interface PlacedTile {
-  def: keyof typeof definitions
-  adjacent: {
-    [keys in Dir]?: PlacedTile
+  draw(at: Vector) {
+    this.tileMap.add({
+      at,
+      definition: this.definition,
+    });
+  }
+
+  rect(start: Vector, end: Vector) {}
+
+  line(at: Vector, angle: Vector, amount: number) {
+    for (let i = 0; i < amount; i++) {
+      const pos = vec(at.x + (angle.x * i), at.y + (angle.y * i));
+
+      this.draw(pos);
+    }
   }
 }
 
-function determineEdge(tile: PlacedTile): Dir {
-  const rules = {
-    NW: ['N','W'],
-    N: ['N'],
-    NE: ['N','E'],
-    E: ['E'],
-    SE: ['S','E'],
-    S: ['S']
-  }
-}
+// Example implementation:
+//
