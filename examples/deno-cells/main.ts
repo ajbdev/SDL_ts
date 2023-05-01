@@ -70,7 +70,6 @@ async function main(): Promise<number> {
   let showHitBox = false;
   let showTileRect = false;
   let showCollisionRect = false;
-  let lastTick = 0;
 
   const level = new Level(levelTexture);
 
