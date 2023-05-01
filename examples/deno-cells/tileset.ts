@@ -1,5 +1,4 @@
-import { SDL } from "SDL_ts";
-import { Tile } from "./tilemap.ts";
+import { BaseTile } from "./tilemap.ts";
 
 
 enum TileSetType {
@@ -42,20 +41,37 @@ const BRICK: TileSetDefinition = {
   },
 };
 
-export const TileSetDefinitions = {
-  BRICK: BRICK
-} as const;
-
-export type TileSetDefinitions = keyof typeof TileSetDefinitions;
-
- interface PlacedTile extends Tile {
+ export interface LinkedTile extends BaseTile {
   def: keyof typeof TileSetDefinitions
   adjacent: {
-    [keys in Dir]?: PlacedTile
+    [keys in Dir]?: LinkedTile
   }
 }
 
-function determineEdge(tile: PlacedTile): Dir {
+
+//8-way floodfill using stack
+// void floodFill8Stack(int x, int y, int newColor, int oldColor)
+// {
+//   if(newColor == oldColor) return; //avoid infinite loop
+
+//   static const int dx[8] = {0, 1, 1, 1, 0, -1, -1, -1}; // relative neighbor x coordinates
+//   static const int dy[8] = {-1, -1, 0, 1, 1, 1, 0, -1}; // relative neighbor y coordinates
+
+//   std::vector stack;
+//   push(stack, x, y);
+//   while(pop(stack, x, y))
+//   {
+//     screenBuffer[y][x] = newColor;
+//     for(int i = 0; i < 8; i++) {
+//       int nx = x + dx[i];
+//       int ny = y + dy[i];
+//       if(nx >= 0 && nx < w && ny >= 0 && ny < h && screenBuffer[ny][nx] == oldColor) {
+//         push(stack, nx, ny);
+//       }
+//     }
+//   }
+// }
+function determineEdge(tile: LinkedTile): Dir {
   const rules = {
     NW: ['N','W'],
     N: ['N'],
@@ -85,12 +101,8 @@ function determineEdge(tile: PlacedTile): Dir {
 }
 
 
-export class TileSet {
-  public readonly definitions: TileSetDefinitions[];
+export const TileSetDefinitions = {
+  BRICK: BRICK,
+} as const;
 
-  constructor(public readonly texture: SDL.Texture) { 
-    this.definitions = [
-      'BRICK'
-    ]
-  }
-}
+export type TileSetDefinitions = keyof typeof TileSetDefinitions;

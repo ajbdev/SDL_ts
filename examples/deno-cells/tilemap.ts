@@ -1,52 +1,48 @@
-import { TileSet, TileSetDefinitions } from "./tileset.ts";
-import { Vector } from "./util.ts";
-import { SDL } from "SDL_ts";
+import { TileSetDefinitions } from "./tileset.ts";
+import { Vector, vec } from "./util.ts";
 
-export interface Tile {
+export interface BaseTile {
   pos: Vector;
-  definition: TileSetDefinitions;
-  srcrect: SDL.Rect;
-  dstrect?: SDL.Rect;
+  def: TileSetDefinitions;
 }
 
 export class TileMap {
-  private tiles: Tile[] = [];
+  public readonly tiles: BaseTile[] = [];
 
-  constructor(public readonly tileset: TileSet) {
-  }
-
-  public retrieve(at: Vector): Tile | undefined {
+  public retrieve(at: Vector): BaseTile | undefined {
     return this.tiles.find(
-      (tile) => tile.pos.x === at.x && tile.pos.y === at.y,
+      (tile) => tile.pos.x === at.x && tile.pos.y === at.y
     );
   }
 
-  public add(tile: Tile): void {
+  public add(tile: BaseTile): void {
     if (!this.retrieve(tile.pos)) {
       this.tiles.push(tile);
     }
   }
 }
 
-class TileMapCanvas {
+export class TileMapCanvas {
   private definition: TileSetDefinitions;
   constructor(private tileMap: TileMap) {
-    this.definition = tileMap.tileset.definitions[0];
+    this.definition = 'BRICK';
   }
 
   // Imperative function style so you can "draw" the tilemap like a canvas
-  setDefinition(def: TileSetDefinitions) {}
+  setDefinition(def: TileSetDefinitions): void {
+    this.definition = def;
+  }
 
-  draw(at: Vector) {
+  draw(at: Vector): void {
     this.tileMap.add({
-      at,
-      definition: this.definition,
+      pos: at,
+      def: this.definition,
     });
   }
 
-  rect(start: Vector, end: Vector) {}
+  // rect(start: Vector, end: Vector): void {}
 
-  line(at: Vector, angle: Vector, amount: number) {
+  line(at: Vector, angle: Vector, amount: number): void {
     for (let i = 0; i < amount; i++) {
       const pos = vec(at.x + (angle.x * i), at.y + (angle.y * i));
 
@@ -54,6 +50,3 @@ class TileMapCanvas {
     }
   }
 }
-
-// Example implementation:
-//
