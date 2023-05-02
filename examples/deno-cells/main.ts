@@ -80,8 +80,6 @@ async function main(): Promise<number> {
 
     player.update(tick);
 
-    lastTick = tick;
-
     while (SDL.PollEvent(event) != 0) {
       if (event.type === SDL.EventType.QUIT) {
         done = true;

@@ -1,17 +1,42 @@
 import { TileSetDefinitions } from "./tileset.ts";
 import { vec, Vector } from "./util.ts";
+import { SDL } from "SDL_ts";
 
+const dirs = {
+  NW: "NW",
+  N: "N",
+  NE: "NE",
+  E: "E",
+  SE: "SE",
+  S: "S",
+  SW: "SW",
+  W: "W",
+  CENTER: "CENTER",
+} as const;
+
+type Dir = keyof typeof dirs;
 export interface BaseTile {
   pos: Vector;
   def: TileSetDefinitions;
 }
 
+export interface RenderedTile extends BaseTile {
+  edge: Dir;
+  srcrect: SDL.Rect;
+  dstrect: SDL.Rect;
+}
+
 export class TileMap {
   public readonly tiles: BaseTile[] = [];
+  public readonly canvas: TileMapCanvas;
+
+  constructor() {
+    this.canvas = new TileMapCanvas(this);
+  }
 
   public retrieve(at: Vector): BaseTile | undefined {
     return this.tiles.find(
-      (tile) => tile.pos.x === at.x && tile.pos.y === at.y,
+      (tile) => tile.pos.x === at.x && tile.pos.y === at.y
     );
   }
 
@@ -21,7 +46,38 @@ export class TileMap {
     }
   }
 
-  public determineEdge(target: BaseTile): string {
+  public render(): RenderedTile[] {
+    return this.tiles.map((tile) => {
+      const edge = this.determineEdge(tile);
+
+      const def = TileSetDefinitions[tile.def];
+
+      const { coords } = def;
+
+      const srcrect = new SDL.Rect(
+        coords[edge]![0] * def.tileSize,
+        coords[edge]![1] * def.tileSize,
+        def.tileSize,
+        def.tileSize
+      );
+
+      const dstrect = new SDL.Rect(
+        tile.pos.x * def.tileSize,
+        tile.pos.y * def.tileSize,
+        def.tileSize,
+        def.tileSize
+      );
+
+      return {
+        ...tile,
+        edge,
+        srcrect,
+        dstrect,
+      };
+    });
+  }
+
+  public determineEdge(target: BaseTile): Dir {
     const possibilities = {
       NW: ["N", "W"],
       N: ["N"],
@@ -29,8 +85,8 @@ export class TileMap {
       E: ["E"],
       SE: ["S", "E"],
       S: ["S"],
-      SW: ["S","W"],
-      W: ["W"]
+      SW: ["S", "W"],
+      W: ["W"],
     };
 
     const angles = {
@@ -46,12 +102,18 @@ export class TileMap {
 
     for (const tile of this.tiles) {
       for (const [dir, angle] of Object.entries(angles)) {
-        if (target.pos.x + angle.x === tile.pos.x && target.pos.y + angle.y === tile.pos.y) {
-          Object.keys(possibilities).forEach(edge => {
-            if (possibilities[edge as keyof typeof possibilities].indexOf(dir) > -1) {
+        if (
+          target.pos.x + angle.x === tile.pos.x &&
+          target.pos.y + angle.y === tile.pos.y
+        ) {
+          Object.keys(possibilities).forEach((edge) => {
+            if (
+              possibilities[edge as keyof typeof possibilities].indexOf(dir) >
+              -1
+            ) {
               delete possibilities[edge as keyof typeof possibilities];
             }
-          })
+          });
         }
       }
     }
@@ -59,14 +121,14 @@ export class TileMap {
     const edge = Object.keys(possibilities).pop();
 
     if (!edge) {
-      return 'CENTER';
+      return "CENTER";
     }
 
-    return edge;
+    return edge as Dir;
   }
 }
 
-export class TileMapCanvas {
+class TileMapCanvas {
   private definition: TileSetDefinitions;
   constructor(private tileMap: TileMap) {
     this.definition = "BRICK";
@@ -88,7 +150,7 @@ export class TileMapCanvas {
 
   line(at: Vector, angle: Vector, amount: number): void {
     for (let i = 0; i < amount; i++) {
-      const pos = vec(at.x + (angle.x * i), at.y + (angle.y * i));
+      const pos = vec(at.x + angle.x * i, at.y + angle.y * i);
 
       this.draw(pos);
     }
