@@ -78,15 +78,18 @@ export class TileMap {
   }
 
   public determineEdge(target: BaseTile): Dir {
-    const possibilities = {
-      NW: ["N", "W"],
-      N: ["N"],
-      NE: ["N", "E"],
-      E: ["E"],
-      SE: ["S", "E"],
-      S: ["S"],
-      SW: ["S", "W"],
-      W: ["W"],
+    console.log('---')
+    console.log('Tile: ', target.pos);
+    const rules: { [key:string]:[string, string]} = {
+      // edge: [open, neighbors]
+      NW: ["NW", "E"],
+      N: ["N", "EW"],
+      NE: ["NE", "W"],
+      E: ["E", "SN"],
+      SE: ["SE", "N"],
+      S: ["S", "EW"],
+      SW: ["SW", "N"],
+      W: ["W", "SN"],
     };
 
     const angles = {
@@ -100,31 +103,49 @@ export class TileMap {
       NW: vec(-1, -1),
     };
 
-    for (const tile of this.tiles) {
-      for (const [dir, angle] of Object.entries(angles)) {
-        if (
-          target.pos.x + angle.x === tile.pos.x &&
-          target.pos.y + angle.y === tile.pos.y
-        ) {
-          Object.keys(possibilities).forEach((edge) => {
-            if (
-              possibilities[edge as keyof typeof possibilities].indexOf(dir) >
-              -1
-            ) {
-              delete possibilities[edge as keyof typeof possibilities];
-            }
-          });
-        }
+    const adjacent = this.tiles.map(tile => {
+      return Object.entries(angles)
+        .filter(
+          ([dir, angle]) =>
+            target.pos.x + angle.x === tile.pos.x &&
+            target.pos.y + angle.y === tile.pos.y
+        )
+        .map(([dir, _]) => dir);
+    }).flatMap(a => a);
+
+    console.log('adjacent: ', adjacent.join(''));
+
+    const edges = Object.entries(rules).filter(([edge, [open, neighbors]]) => {
+      console.log("  tile: ", edge);
+      const isOpen = !adjacent.some((dir) => open.indexOf(dir) > -1);
+      console.log(`%c    has none of ${open}: ${isOpen}`, `color: ${isOpen ? 'green' : 'red'}`);
+      const hasExactlyNeighbors =
+        adjacent.every((dir) => neighbors.indexOf(dir) > -1) &&
+        adjacent.length === neighbors.length;
+      console.log(
+        `%c    has exactly neighbors ${neighbors}: ${hasExactlyNeighbors}`,
+        `color: ${hasExactlyNeighbors ? "green" : "red"}`
+      );
+      if (!isOpen) {
+        return false;
       }
+
+      if (!hasExactlyNeighbors) {
+        return false;
+      }
+
+      return true;
+    }).map(([edge, _], ) => {
+      return edge;
+    })
+
+    console.log('possible edges: ', edges);
+
+    if (edges.length > 0) {
+      return edges.shift() as string as Dir;
     }
 
-    const edge = Object.keys(possibilities).pop();
-
-    if (!edge) {
-      return "CENTER";
-    }
-
-    return edge as Dir;
+    return dirs.N;
   }
 }
 

@@ -2,7 +2,7 @@ import { Box, BoxArray, IMG, Int, int, Pointer, SDL, SDLError } from "SDL_ts";
 import { path } from "../../deps.ts";
 import { ASSETS_PATH } from "../../shared/constants.ts";
 import { Player } from "./player.ts";
-import { Level } from "./level.ts";
+import { level } from "./level.ts";
 
 const WINDOW_WIDTH = 1024;
 const WINDOW_HEIGHT = 768;
@@ -15,6 +15,7 @@ interface KeyMap {
 }
 
 async function main(): Promise<number> {
+
   SDL.Init(SDL.InitFlags.VIDEO);
   IMG.Init(IMG.InitFlags.PNG);
 
@@ -71,9 +72,7 @@ async function main(): Promise<number> {
   let showTileRect = false;
   let showCollisionRect = false;
 
-  const level = new Level(levelTexture);
-
-  const player = new Player(playerTexture, keys, level);
+  const player = new Player(playerTexture, keys);
 
   while (!done) {
     const tick = performance.now();
@@ -111,12 +110,12 @@ async function main(): Promise<number> {
     SDL.RenderClear(renderer);
 
     SDL.SetRenderDrawColor(renderer, 0, 255, 0, 255);
-    for (const tile of level.tiles) {
+    for (const tile of level) {
       if (!tile.dstrect) {
         continue;
       }
 
-      SDL.RenderCopy(renderer, level.texture, tile.srcrect, tile.dstrect);
+      SDL.RenderCopy(renderer, levelTexture, tile.srcrect, tile.dstrect);
       if (showTileRect) {
         SDL.RenderDrawRect(renderer, tile.dstrect);
       }
@@ -167,7 +166,7 @@ async function main(): Promise<number> {
     SDL.SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL.RenderPresent(renderer);
     SDL.RenderFlush(renderer);
-    
+
     const skip = tick + SKIP_TICKS - performance.now();
 
     sleep(skip);

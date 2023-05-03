@@ -1,7 +1,7 @@
 import { SDL } from "SDL_ts";
 
 import { clamp, vec, Vector } from "./util.ts";
-import { Level, TileFlag, tileHasFlag } from "./level.ts";
+import { level } from "./level.ts";
 
 const AnimationState = {
   Idle: "Idle",
@@ -70,8 +70,8 @@ const Edge = {
 type Edge = keyof typeof Edge;
 
 function detectCollisionEdge(a: SDL.Rect, b: SDL.Rect): Edge | undefined {
-  const distanceX = (a.x + a.w / 2) - (b.x + b.w / 2);
-  const distanceY = (a.y + a.h / 2) - (b.y + b.h / 2);
+  const distanceX = a.x + a.w / 2 - (b.x + b.w / 2);
+  const distanceY = a.y + a.h / 2 - (b.y + b.h / 2);
 
   const halfWidth = (a.w + b.w) / 2;
   const halfHeight = (a.h + b.h) / 2;
@@ -96,7 +96,7 @@ export class Player {
   private isGrounded = false;
   private isJumping = false;
   private jumpHeight = 50;
-  private gravityVelocity = 2 * this.jumpHeight / (60 ^ 2);
+  private gravityVelocity = (2 * this.jumpHeight) / (60 ^ 2);
   private jumpVelocity = Math.sqrt(2 * this.gravityVelocity * this.jumpHeight);
   public collisionRect = new SDL.Rect(0, 0, 0, 0);
   private velocity = vec(0, 0);
@@ -107,14 +107,13 @@ export class Player {
 
   constructor(
     public readonly texture: SDL.Texture,
-    private readonly keys: KeyMap,
-    private readonly level: Level,
+    private readonly keys: KeyMap
   ) {
     this.animRect = new SDL.Rect(
       this.animation.start.x,
       this.animation.start.y,
       this.animation.size.x,
-      this.animation.size.y,
+      this.animation.size.y
     );
     this.worldRect = new SDL.Rect(0, 0, 0, 0);
   }
@@ -159,7 +158,13 @@ export class Player {
       this.flip = SDL.RendererFlip.HORIZONTAL;
 
       this.changeAnimation(AnimationState.Running);
-    } if (this.keys.Space && !this.isAttacking && this.isGrounded && !this.isJumping) {
+    }
+    if (
+      this.keys.Space &&
+      !this.isAttacking &&
+      this.isGrounded &&
+      !this.isJumping
+    ) {
       this.velocity.y -= this.jumpVelocity;
       this.isJumping = true;
       this.isGrounded = false;
@@ -170,10 +175,14 @@ export class Player {
     }
     this.calcWorldRect();
 
-    this.velocity.x = this.runVelocity *
-      (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1)
+    this.velocity.x =
+      this.runVelocity * (this.flip === SDL.RendererFlip.HORIZONTAL ? -1 : 1);
 
-    this.velocity.y = clamp(this.velocity.y + this.gravityVelocity, this.jumpVelocity*-1, this.gravityVelocity*2);
+    this.velocity.y = clamp(
+      this.velocity.y + this.gravityVelocity,
+      this.jumpVelocity * -1,
+      this.gravityVelocity * 2
+    );
 
     this.checkCollision();
 
@@ -190,7 +199,7 @@ export class Player {
       this.worldRect.x + this.animation.hitbox.x,
       this.worldRect.y + this.animation.hitbox.y,
       this.animation.hitbox.w,
-      this.animation.hitbox.h,
+      this.animation.hitbox.h
     );
   }
 
@@ -200,8 +209,10 @@ export class Player {
     hitbox.y += this.velocity.y;
     hitbox.x += this.velocity.x;
 
-    for (const tile of this.level.tiles) {
-      if (!tile.dstrect || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
+    for (const tile of level) {
+      if (!tile.dstrect) {
+        // || !tileHasFlag(tile, TileFlag.BOUNDARY)) {
+        // todo: boundary check
         continue;
       }
       if (SDL.HasIntersection(hitbox, tile.dstrect)) {
