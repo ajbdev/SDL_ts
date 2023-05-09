@@ -1,48 +1,59 @@
+import { Dir, Vector, vec } from "./util.ts";
 
-enum TileSetType {
-  AUTOTILE,
-}
-
-const dirs = {
-  NW: 'NW',
-  N: 'N',
-  NE: 'NE',
-  E: 'E',
-  SE: 'SE',
-  S: 'S',
-  SW: 'SW',
-  W: 'W',
-  CENTER: 'CENTER'
+export const TileSetType = {
+  HORIZONTAL_BOUNDARY: "HORIZONTAL_BOUNDARY",
+  VERTICAL_BOUNDARY: "VERTICAL_BOUNDARY",
 } as const;
 
-type Dir = keyof typeof dirs;
-
-interface TileSetDefinition {
-  type: TileSetType;
+export type TileSetType = keyof typeof TileSetType;
+interface TileSetHorizontalBoundary  {
+  type: "HORIZONTAL_BOUNDARY";
   tileSize: number;
-  coords: {
-    [key in Dir]?: [number, number]
+  coords: Record<keyof Pick<typeof Dir, "LEFT" | "RIGHT" | "CENTER">, Vector>;
+}
+
+interface TileSetVerticalBoundary  {
+  type: "VERTICAL_BOUNDARY";
+  tileSize: number;
+  coords: Record<keyof Pick<typeof Dir, "TOP" | "CENTER" | "BOTTOM">, Vector>;
+}
+
+export type TileSetDefinition = TileSetHorizontalBoundary | TileSetVerticalBoundary;
+
+const BRICK_WALL_EAST: TileSetDefinition = {
+  type: TileSetType.VERTICAL_BOUNDARY,
+  tileSize: 16,
+  coords: { 
+    TOP: vec(3, 2),
+    CENTER: vec(3, 2),
+    BOTTOM: vec(3, 2)
   }
 }
 
-const BRICK: TileSetDefinition = {
-  type: TileSetType.AUTOTILE,
+const BRICK_WALL_WEST: TileSetDefinition = {
+  type: TileSetType.VERTICAL_BOUNDARY,
   tileSize: 16,
   coords: {
-    CENTER: [2, 2],
-    NW: [1, 1],
-    N: [2, 1],
-    NE: [3, 1],
-    E: [3, 2],
-    SW: [1, 3],
-    W: [1, 2],
-    S: [2, 3],
-    SE: [3, 3],
+    TOP: vec(1, 2),
+    CENTER: vec(1, 2),
+    BOTTOM: vec(1, 2),
+  },
+};
+
+const BRICK_FLOOR: TileSetDefinition = {
+  type: TileSetType.HORIZONTAL_BOUNDARY,
+  tileSize: 16,
+  coords: {
+    LEFT: vec(1, 1),
+    CENTER: vec(2, 1),
+    RIGHT: vec(3, 1),
   },
 };
 
 export const TileSetDefinitions = {
-  BRICK: BRICK,
+  BRICK_FLOOR,
+  BRICK_WALL_EAST,
+  BRICK_WALL_WEST,
 } as const;
 
 export type TileSetDefinitions = keyof typeof TileSetDefinitions;
